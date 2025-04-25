@@ -1,0 +1,50 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# 模型管理规范
+
+## 动态模型加载
+
+本项目支持动态加载位于 `models/` 目录下的服装识别模型。服务器启动时会：
+
+1. 扫描 `models/` 目录下的所有子文件夹。
+2. 将每个子文件夹的名称视为一个可用的模型版本。
+3. 读取 `.env` 文件中的 `ACTIVE_CLOTHING_MODEL` 环境变量。
+4. 加载由 `ACTIVE_CLOTHING_MODEL` 指定的模型进行推理。
+
+## 添加新模型
+
+要添加一个新的模型版本：
+
+1. 在 `models/` 目录下创建一个新的子文件夹，名称应清晰标识模型版本（例如 `my_model_v3`）。
+2. 将该模型的所有相关文件（如模型权重、配置文件等）放入此子文件夹。
+3. （可选）更新 `.env` 文件中的 `ACTIVE_CLOTHING_MODEL` 变量为新模型的文件夹名称。
+4. 重启后端服务器以使更改生效。
+
+## 选择激活模型
+
+1. 编辑项目根目录下的 `.env` 文件。
+2. 设置 `ACTIVE_CLOTHING_MODEL` 变量的值为您想使用的模型文件夹名称。
+   ```dotenv
+   ACTIVE_CLOTHING_MODEL=your_desired_model_folder_name
+   ```
+3. 重启后端服务器。
+
+## 相关API
+
+- `GET /api/v1/models/available`: 返回 `models/` 目录下所有子文件夹名称的列表，即所有可用的模型版本。
+- `GET /api/v1/models/current`: 返回当前配置（通过 `ACTIVE_CLOTHING_MODEL` 环境变量）并正在使用的模型名称。
+
+## 重要文件引用
+
+- AI模型设计文档: [ai_models_design.md](mdc:ai_models_design.md)
+- 项目结构文档（包含API）: [project_structure.md](mdc:project_structure.md)
+- 项目说明（包含配置说明）: [README.md](mdc:README.md)
+
+## 注意事项
+
+- 确保模型文件夹名称是有效的标识符，易于理解。
+- 如果 `.env` 文件中未设置 `ACTIVE_CLOTHING_MODEL` 或设置的模型文件夹不存在，服务器的行为可能是报错或加载默认模型（具体行为需在代码中实现和确认）。
+- 模型加载发生在服务器启动时，切换模型需要重启服务器。
