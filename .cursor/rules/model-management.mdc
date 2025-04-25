@@ -11,6 +11,15 @@ alwaysApply: false
 
 # 模型管理规范
 
+## 当前可用模型
+
+目前项目中有两个服装识别模型:
+
+1. `MD_resnet50_40_32_10e4_clothes_model` - 主要服装识别模型（基于ResNet50）
+2. `my_clothes_model` - 备用服装识别模型
+
+未来会添加更多服装识别模型到`models/`目录中。
+
 ## 动态模型加载
 
 本项目支持动态加载位于 `models/` 目录下的服装识别模型。服务器启动时会：
@@ -34,7 +43,7 @@ alwaysApply: false
 1. 编辑项目根目录下的 `.env` 文件。
 2. 设置 `ACTIVE_CLOTHING_MODEL` 变量的值为您想使用的模型文件夹名称。
    ```dotenv
-   ACTIVE_CLOTHING_MODEL=your_desired_model_folder_name
+   ACTIVE_CLOTHING_MODEL=MD_resnet50_40_32_10e4_clothes_model
    ```
 3. 重启后端服务器。
 

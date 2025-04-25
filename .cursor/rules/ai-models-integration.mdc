@@ -13,7 +13,7 @@ alwaysApply: false
 
 ## 核心位置
 
-- **模型代码**: `models/clothing_recognition/`, `models/image_generation/`
+- **模型目录**: `models/` 目录下存放所有服装识别模型
 - **服务封装**: `backend/app/services/` (clothing_recognition.py, llm_service.py, image_generation.py)
 
 ## 集成原则
@@ -25,7 +25,10 @@ alwaysApply: false
 
 ## 核心模型
 
-- **服装识别**: ResNet50基础架构，模型选择通过`.env`中的`ACTIVE_CLOTHING_MODEL`配置
+- **服装识别**: 
+  - 当前模型: `MD_resnet50_40_32_10e4_clothes_model` 和 `my_clothes_model`
+  - 基于ResNet50架构
+  - 模型选择通过`.env`中的`ACTIVE_CLOTHING_MODEL`配置
 - **DeepSeek**: 生成穿搭策略，提示词存放在`backend/app/core/prompts/`
 - **图像生成**: Stable Diffusion + ControlNet，GPU实例部署
 
