@@ -3,25 +3,47 @@ description:
 globs: 
 alwaysApply: false
 ---
-# API设计原则
+{
+  "type": "agent_requested",
+  "title": "API设计规范",
+  "description": "后端API设计的关键规范和约定"
+}
 
-## 核心原则
+# API设计规范
 
-- **RESTful**: 遵循RESTful设计风格。
-- **JSON**: API请求和响应主体主要使用JSON格式。
-- **版本控制**: API通过URL路径进行版本控制 (例如 `/api/v1/...`)。
-- **认证**: 使用JWT进行无状态认证，通过`Authorization: Bearer {token}`传递。
-- **错误处理**: 返回统一的错误响应结构，包含错误码和消息。
+## 基本原则
+- **RESTful风格**: 资源为中心的API设计
+- **JSON格式**: 所有请求和响应使用JSON
+- **版本管理**: 使用`/api/v1/`形式进行版本控制
+- **JWT认证**: 请求头使用`Authorization: Bearer {token}`
+- **统一错误**: 所有错误返回相同结构的错误码和消息
 
-## 关键约定
+## 命名与方法
+- **资源命名**: 使用复数名词和kebab-case（如`/clothing-items`）
+- **HTTP方法**:
+  - `GET`: 查询资源
+  - `POST`: 创建资源
+  - `PUT/PATCH`: 更新资源
+  - `DELETE`: 删除资源
+- **状态码**: 使用标准HTTP状态码（2xx成功，4xx客户端错误，5xx服务器错误）
 
-- **资源命名**: URL路径使用复数名词和kebab-case (例如 `/api/v1/clothing-items`)。
-- **HTTP方法**: 严格按照语义使用GET, POST, PUT, PATCH, DELETE。
-- **状态码**: 标准HTTP状态码 (2xx成功, 4xx客户端错误, 5xx服务器错误)。
+## 示例
+```
+# 查询服装列表
+GET /api/v1/clothing-items
 
-## 重要文件引用
+# 创建新服装
+POST /api/v1/clothing-items
 
+# 更新服装
+PUT /api/v1/clothing-items/123
+
+# 删除服装
+DELETE /api/v1/clothing-items/123
+```
+
+## 相关文档
 - API端点列表: [project_structure.md](mdc:project_structure.md)
-- 技术栈(FastAPI): [tech_stack.md](mdc:tech_stack.md)
+- 技术栈: [tech_stack.md](mdc:tech_stack.md)
 
 

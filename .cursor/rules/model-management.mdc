@@ -1,8 +1,14 @@
 ---
-description:
-globs:
+description: 
+globs: 
 alwaysApply: false
 ---
+{
+  "type": "agent_requested",
+  "title": "模型管理规范",
+  "description": "AI模型加载、管理与切换的规范和约定"
+}
+
 # 模型管理规范
 
 ## 动态模型加载

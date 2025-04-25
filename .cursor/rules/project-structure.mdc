@@ -1,8 +1,14 @@
 ---
-description:
-globs:
+description: 
+globs: 
 alwaysApply: false
 ---
+{
+  "type": "agent_requested",
+  "title": "项目结构与目录规范",
+  "description": "项目目录结构和文件组织的规范和约定"
+}
+
 # 项目结构与目录规范
 
 ## 目录结构

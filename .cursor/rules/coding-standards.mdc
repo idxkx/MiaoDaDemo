@@ -1,8 +1,14 @@
 ---
-description:
-globs:
+description: 
+globs: 
 alwaysApply: false
 ---
+{
+  "type": "agent_requested",
+  "title": "编码规范与开发标准",
+  "description": "项目代码开发的关键规范和约定"
+}
+
 # 编码规范与开发标准
 
 ## 核心原则

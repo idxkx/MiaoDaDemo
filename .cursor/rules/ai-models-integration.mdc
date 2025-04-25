@@ -1,8 +1,14 @@
 ---
-description:
-globs:
+description: 
+globs: 
 alwaysApply: false
 ---
+{
+  "type": "agent_requested",
+  "title": "AI模型集成规范",
+  "description": "AI模型集成的关键规范和约定"
+}
+
 # AI模型集成规范
 
 ## 核心位置

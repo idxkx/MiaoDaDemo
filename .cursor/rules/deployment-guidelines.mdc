@@ -3,6 +3,12 @@ description:
 globs: 
 alwaysApply: false
 ---
+{
+  "type": "agent_requested",
+  "title": "部署与环境配置指南",
+  "description": "项目部署与环境配置的关键规范和约定"
+}
+
 # 部署与环境配置指南
 
 ## 核心部署方式

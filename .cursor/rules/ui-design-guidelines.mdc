@@ -1,8 +1,14 @@
 ---
-description:
-globs:
+description: 
+globs: 
 alwaysApply: false
 ---
+{
+  "type": "agent_requested",
+  "title": "UI设计与用户体验指南",
+  "description": "UI设计和用户体验的关键规范和约定"
+}
+
 # UI设计与用户体验指南
 
 ## 核心原则
