@@ -190,18 +190,27 @@ ACTIVE_CLOTHING_MODEL=my_clothes_model
 
 ## 数据库设计参考
 
-由于项目侧重于核心功能的快速迭代，目前**没有提供自动生成 ER 图的工具**。
+要了解数据库的结构和关系，有以下几种方式：
 
-理解数据库结构的最佳方式是：
+1.  **阅读模型代码 (最准确)**：
+    *   数据库的表、字段和关系最终是由 `backend/app/models/` 目录下的 Python 文件 (`.py`) 定义的。
+    *   直接阅读这些文件可以了解最准确、最新的数据库设计。
 
-1.  **阅读模型代码 (主要方式)**：
-    *   数据库的详细表结构、字段定义（包括数据类型、是否主键/外键）以及表之间的关系，最终由 `backend/app/models/` 目录下的 Python 文件 (`.py`) 定义。
-    *   直接阅读这些模型文件是了解当前数据库设计的最准确途径。
+2.  **生成 Mermaid ER 图代码 (推荐用于可视化)**：
+    *   项目提供了一个工具脚本，可以根据当前的数据库模型自动生成 [Mermaid](https://mermaid.js.org/) 格式的 ER 图代码。
+    *   在项目根目录 (MiaoDaDemo) 下打开终端，运行以下命令：
+      ```bash
+      python tools/generate_mermaid.py
+      ```
+    *   该脚本会分析模型文件，并在终端直接打印出 Mermaid 代码。
+    *   **如何查看**: 你可以将打印出的完整代码 (从 `erDiagram` 开始到最后) 复制下来，粘贴到任何支持 Mermaid 的地方来查看可视化的 ER 图，例如：
+        *   在线编辑器: [Mermaid Live Editor](https://mermaid.live/)
+        *   一些 Markdown 编辑器（如 Typora、Obsidian，可能需要安装插件）
+        *   GitHub/GitLab 的 Markdown 文件
+    *   这个脚本会尝试从代码注释中提取中文名，如果模型代码中的字段有 `# 中文名` 这样的注释，图中就会显示中文名。
 
-2.  **手动绘制或查看 ER 图 (可选)**：
-    *   如果你需要一个可视化的 ER 图来帮助理解，可以使用支持 [Mermaid 语法](https://mermaid.js.org/syntax/entityRelationshipDiagram.html) 的工具（如在线的 [Mermaid Live Editor](https://mermaid.live/) 或其他绘图软件）。
-    *   你需要**手动**将模型代码中的信息转换为 Mermaid 代码。在转换时，可以参考 `.cursor/rules/er-diagram-standards.mdc` 文件中定义的核心规范，以了解期望的图表样式（例如如何标记主/外键，以及中英文显示的要求）。
-    *   如果你之前运行过 `tools/generate_mermaid.py` 脚本并保存了其输出，你可以直接将那段 Mermaid 代码粘贴到渲染工具中查看。
+3.  **参考 ER 图规范 (可选)**：
+    *   如果你想手动绘制 ER 图或者理解图的规范，可以参考 `.cursor/rules/er-diagram-standards.mdc` 文件中定义的核心规范。
 
 ## 贡献代码
 
