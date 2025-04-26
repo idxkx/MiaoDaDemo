@@ -10,6 +10,15 @@ from alembic import context
 from app.core.config import settings
 from app.db.base import Base  # 这会导入所有的模型
 
+# --- 新增：确保所有模型都被加载 ---
+# 导入包含你模型的模块。如果你的模型分散在多个文件，
+# 确保基础的 Base 或包含所有模型定义的 __init__.py 被导入。
+# 例如，如果你的模型都在 app.models 下：
+from app import models # 假设 app/models/__init__.py 会导入所有模型
+# 或者更明确地导入每个模型文件：
+# from app.models import user, clothes, clothes_image # 等等
+# --- 结束新增 ---
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config

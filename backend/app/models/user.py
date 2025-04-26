@@ -11,7 +11,7 @@ from app.db.base import Base
 class User(Base):
     """用户模型
     
-    存储系统用户的基本信息和账号数据，支持微信小程序登录认证。
+    存储系统用户的基本信息和账号数据，支持用户名密码登录认证。
     记录用户的个人资料、权限设置和偏好信息，与服装和搭配建立关联。
     提供用户风格偏好和使用习惯分析，支持个性化推荐功能。
     作为系统的核心用户实体，管理用户的身份和权限。
@@ -19,7 +19,8 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)  # 用户ID，主键，系统自动生成
-    openid = Column(String(100), unique=True, index=True)  # 微信小程序用户唯一标识，用于微信登录验证
+    username = Column(String(50), unique=True, index=True)  # 用户名，用于登录
+    hashed_password = Column(String(100), nullable=False)  # 密码哈希，存储加密后的密码
     
     # 用户资料
     nickname = Column(String(50), index=True)  # 用户昵称，显示名称

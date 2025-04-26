@@ -52,8 +52,8 @@ class Clothes(Base):
     brand = Column(String(100), index=True, nullable=True)  # 品牌名称，如"Nike"、"Adidas"等
     
     # AI特征和识别
-    ai_features = Column(MutableList.as_mutable(ARRAY(Float)), nullable=True)  # AI提取的特征向量，用于相似服装匹配和推荐
-    ai_tags = Column(ARRAY(String), nullable=True)  # AI识别的标签集合，用于自动分类和特征标记
+    ai_features = Column(MutableList.as_mutable(JSON), nullable=True)  # AI提取的特征向量，用于相似服装匹配和推荐
+    ai_tags = Column(JSON, nullable=True)  # AI识别的标签集合，用于自动分类和特征标记
     ai_category_confidence = Column(Float, nullable=True)  # AI分类置信度，表示AI对分类结果的确信程度
     is_ai_categorized = Column(Boolean, default=False)  # 是否由AI分类，区分人工分类和AI自动分类
     

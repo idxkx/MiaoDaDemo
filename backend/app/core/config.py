@@ -1,17 +1,24 @@
 import secrets
 from typing import Any, Dict, List, Optional, Union
 
-from pydantic import AnyHttpUrl, PostgresDsn, field_validator
+from pydantic import AnyHttpUrl, field_validator
 from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
+    # API配置
     API_V1_STR: str = "/api/v1"
     SECRET_KEY: str = secrets.token_urlsafe(32)
     # 访问令牌有效期（分钟）
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8  # 8 天
     # BACKEND_CORS_ORIGINS是一个JSON格式的字符串列表，例如：'["http://localhost", "http://localhost:4200"]'
     BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = []
+    
+    # 应用配置
+    ENVIRONMENT: str = "development"
+    APP_HOST: str = "127.0.0.1"
+    APP_PORT: int = 8000
+    LOG_LEVEL: str = "INFO"
 
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")
     def assemble_cors_origins(cls, v: Union[str, List[str]]) -> Union[List[str], str]:
@@ -45,19 +52,11 @@ class Settings(BaseSettings):
     # 存储配置
     STORAGE_TYPE: str = "local"  # local 或 cloud
     LOCAL_STORAGE_PATH: str = "./storage"
-    
-    # 腾讯云COS配置（如果使用）
-    COS_SECRET_ID: Optional[str] = None
-    COS_SECRET_KEY: Optional[str] = None
-    COS_REGION: Optional[str] = None
-    COS_BUCKET: Optional[str] = None
+    IMAGE_STORAGE_PATH: str = "./storage/images/processed/"
     
     # 缓存配置
     CACHE_TYPE: str = "memory"  # memory 或 redis
     REDIS_URL: Optional[str] = None
-    
-    # 日志配置
-    LOG_LEVEL: str = "INFO"
 
     class Config:
         case_sensitive = True

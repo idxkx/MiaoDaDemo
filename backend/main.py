@@ -1,8 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from app.core.config import settings
 from app.api.v1.api import api_router
 import uvicorn
+from pathlib import Path
 
 app = FastAPI(
     title="智能穿搭助手API",
@@ -19,6 +21,12 @@ if settings.BACKEND_CORS_ORIGINS:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+# 确保存储目录存在
+Path(settings.LOCAL_STORAGE_PATH).mkdir(parents=True, exist_ok=True)
+
+# 挂载存储目录作为静态文件
+app.mount("/storage", StaticFiles(directory=settings.LOCAL_STORAGE_PATH), name="storage")
 
 # 包含API路由
 app.include_router(api_router, prefix=settings.API_V1_STR)
