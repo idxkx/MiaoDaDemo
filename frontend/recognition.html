@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>服装识别 - 智能穿搭助手</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- 自定义样式 -->
+    <link href="css/style.css" rel="stylesheet">
+    <style>
+        .preview-container {
+            max-width: 300px;
+            max-height: 300px;
+            margin: 20px auto;
+            border: 2px dashed #ccc;
+            padding: 10px;
+            text-align: center;
+        }
+        
+        #imagePreview {
+            display: none;
+            max-width: 100%;
+            max-height: 280px;
+            margin: 0 auto;
+        }
+        
+        .drop-zone {
+            padding: 40px;
+            border: 2px dashed #ccc;
+            text-align: center;
+            cursor: pointer;
+        }
+        
+        .drop-zone:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .drop-zone.active {
+            border-color: #198754;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">智能穿搭助手</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">首页</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="closet.html">我的衣橱</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="upload.html">添加服装</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="recognition.html">服装识别</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="recommend.html">搭配推荐</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item" id="loginItem">
+                        <a class="nav-link" href="login.html">登录</a>
+                    </li>
+                    <li class="nav-item d-none" id="userProfileItem">
+                        <a class="nav-link" href="#" id="userProfileLink">用户资料</a>
+                    </li>
+                    <li class="nav-item d-none" id="logoutItem">
+                        <a class="nav-link" href="#" id="logoutLink">退出</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要内容 -->
+    <div class="container mt-4">
+        <h1 class="mb-4">服装智能识别</h1>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">上传服装图片进行识别</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="drop-zone" id="dropZone">
+                            <p>拖拽图片到此处或点击选择文件</p>
+                            <input type="file" id="fileInput" accept="image/jpeg,image/png,image/jpg" class="d-none">
+                        </div>
+                        
+                        <div class="preview-container">
+                            <img id="imagePreview" alt="图片预览">
+                        </div>
+                        
+                        <div class="text-center">
+                            <button id="analyzeBtn" class="btn btn-primary" disabled>分析图片</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert alert-info">
+                    <h5>服装识别功能说明：</h5>
+                    <ol>
+                        <li>上传服装图片进行自动识别</li>
+                        <li>系统将返回服装类别、特征和推荐标签</li>
+                        <li>支持JPG和PNG格式图片</li>
+                        <li>服装应占据图片的主要区域</li>
+                        <li>识别结果仅供参考，可能需要手动调整</li>
+                    </ol>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div id="resultContainer">
+                    <!-- 识别结果将在这里显示 -->
+                </div>
+                
+                <div class="card mb-4 d-none" id="modelInfoCard">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">模型信息</h5>
+                    </div>
+                    <div class="card-body">
+                        <p id="modelInfo">加载中...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    <footer class="footer mt-5 py-3 bg-light">
+        <div class="container text-center">
+            <span class="text-muted">智能穿搭助手 &copy; 2023</span>
+        </div>
+    </footer>
+
+    <!-- 加载JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/recognition.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 检查登录状态
+            if (!window.Auth || !window.Auth.isLoggedIn()) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            // 更新导航栏显示
+            document.getElementById('loginItem').classList.add('d-none');
+            document.getElementById('userProfileItem').classList.remove('d-none');
+            document.getElementById('logoutItem').classList.remove('d-none');
+            
+            // 获取DOM元素
+            const dropZone = document.getElementById('dropZone');
+            const fileInput = document.getElementById('fileInput');
+            const modelInfoCard = document.getElementById('modelInfoCard');
+            const modelInfo = document.getElementById('modelInfo');
+            
+            // 初始化识别表单
+            window.ClothingRecognition.initRecognitionForm(
+                'fileInput',
+                'imagePreview',
+                'analyzeBtn',
+                'resultContainer'
+            );
+            
+            // 拖放文件功能
+            dropZone.addEventListener('click', () => {
+                fileInput.click();
+            });
+            
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('active');
+            });
+            
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('active');
+            });
+            
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('active');
+                
+                if (e.dataTransfer.files.length) {
+                    fileInput.files = e.dataTransfer.files;
+                    const event = new Event('change', { bubbles: true });
+                    fileInput.dispatchEvent(event);
+                }
+            });
+            
+            // 获取模型信息
+            async function fetchModelInfo() {
+                try {
+                    const info = await window.ClothingRecognition.getModelInfo();
+                    modelInfoCard.classList.remove('d-none');
+                    
+                    let html = `
+                        <p><strong>模型名称:</strong> ${info.model_name}</p>
+                        <p><strong>计算设备:</strong> ${info.device}</p>
+                        <p><strong>分类数量:</strong> ${info.num_classes}</p>
+                        <div class="mt-3">
+                            <h6>支持的服装类别:</h6>
+                            <div class="d-flex flex-wrap gap-1 mt-2">
+                    `;
+                    
+                    info.class_names.forEach(className => {
+                        html += `<span class="badge bg-secondary">${className}</span>`;
+                    });
+                    
+                    html += `
+                            </div>
+                        </div>
+                    `;
+                    
+                    modelInfo.innerHTML = html;
+                } catch (error) {
+                    console.error('获取模型信息失败:', error);
+                    modelInfo.textContent = '获取模型信息失败: ' + error.message;
+                }
+            }
+            
+            // 加载模型信息
+            fetchModelInfo();
+            
+            // 退出登录处理
+            document.getElementById('logoutLink').addEventListener('click', function(e) {
+                e.preventDefault();
+                window.Auth.logout();
+                window.location.href = 'login.html';
+            });
+        });
+    </script>
+</body>
+</html> 

@@ -2,9 +2,11 @@
 import io
 import os
 import uuid
-from typing import List
+from typing import List, Optional
+import shutil
+from datetime import datetime
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, Request
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, Request, status, Form
 from sqlalchemy.orm import Session
 from PIL import Image # Pillow for potential post-processing
 from rembg import remove # The star of the show!
@@ -12,9 +14,10 @@ from rembg import remove # The star of the show!
 from app import models # models 可以保持这样导入
 from app.crud import clothes as crud_clothes # 直接导入 crud 对象
 from app.crud import clothes_image as crud_clothes_image # 直接导入 crud 对象
-from app.schemas.clothes import Clothes, ClothesCreate, ClothesImage, ClothesImageCreate # 直接导入需要的 Schema 类
+from app.schemas.clothes import Clothes, ClothesCreate, ClothesImage, ClothesImageCreate, ClothesResponse, ClothesUpdate # 直接导入需要的 Schema 类
 from app.api import deps
 from app.core.config import settings # Import settings to get storage path
+from app.models.user import User
 
 router = APIRouter()
 
@@ -26,133 +29,203 @@ os.makedirs(PROCESSED_IMAGE_STORAGE_PATH, exist_ok=True) # Ensure directory exis
 # --- Clothes CRUD Endpoints ---
 # (We can add CRUD endpoints for Clothes itself later here)
 
-@router.post("/", response_model=Clothes)
+@router.post("/", response_model=ClothesResponse, status_code=status.HTTP_201_CREATED)
 def create_clothes(
-    *,
+    clothes_in: ClothesCreate, 
     db: Session = Depends(deps.get_db),
-    clothes_in: ClothesCreate, # 直接使用 ClothesCreate
-    current_user: models.User = Depends(deps.get_active_user)
+    current_user: User = Depends(deps.get_current_user)
 ):
-    """
-    Create new clothes item owned by the current user.
-    """
-    # 使用导入的 crud_clothes
-    clothes = crud_clothes.create_with_owner(db=db, obj_in=clothes_in, user_id=current_user.id)
+    """创建新服装"""
+    
+    # 创建服装实例
+    clothes = Clothes(
+        user_id=current_user.id,
+        **clothes_in.dict(exclude_unset=True)
+    )
+    
+    db.add(clothes)
+    db.commit()
+    db.refresh(clothes)
+    
     return clothes
 
-@router.get("/{clothes_id}", response_model=Clothes)
+@router.get("/", response_model=List[ClothesResponse])
 def read_clothes(
-    *,
+    skip: int = 0, 
+    limit: int = 100, 
     db: Session = Depends(deps.get_db),
-    clothes_id: int,
-    current_user: models.User = Depends(deps.get_active_user)
+    current_user: User = Depends(deps.get_current_user)
 ):
-    """
-    Get clothes item by ID.
-    """
-    # 使用导入的 crud_clothes
-    clothes = crud_clothes.get(db=db, id=clothes_id)
-    if not clothes:
-        raise HTTPException(status_code=404, detail="Clothes not found")
-    if clothes.user_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Not enough permissions")
-    # Populate image URLs correctly if needed (implementation depends on crud/model)
-    # For now, rely on the schema's orm_mode
+    """获取当前用户的所有服装"""
+    clothes = db.query(Clothes).filter(
+        Clothes.user_id == current_user.id
+    ).offset(skip).limit(limit).all()
+    
     return clothes
 
+@router.get("/{clothes_id}", response_model=ClothesResponse)
+def read_clothes_by_id(
+    clothes_id: int, 
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    """根据ID获取服装"""
+    clothes = db.query(Clothes).filter(
+        Clothes.id == clothes_id,
+        Clothes.user_id == current_user.id
+    ).first()
+    
+    if not clothes:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="找不到指定服装或无权限"
+        )
+    
+    return clothes
+
+@router.put("/{clothes_id}", response_model=ClothesResponse)
+def update_clothes(
+    clothes_id: int,
+    clothes_in: ClothesUpdate,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    """更新服装信息"""
+    clothes = db.query(Clothes).filter(
+        Clothes.id == clothes_id,
+        Clothes.user_id == current_user.id
+    ).first()
+    
+    if not clothes:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="找不到指定服装或无权限"
+        )
+    
+    # 更新服装
+    update_data = clothes_in.dict(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(clothes, field, value)
+    
+    db.commit()
+    db.refresh(clothes)
+    
+    return clothes
+
+@router.delete("/{clothes_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_clothes(
+    clothes_id: int,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    """删除服装"""
+    clothes = db.query(Clothes).filter(
+        Clothes.id == clothes_id,
+        Clothes.user_id == current_user.id
+    ).first()
+    
+    if not clothes:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="找不到指定服装或无权限"
+        )
+    
+    db.delete(clothes)
+    db.commit()
+    
+    return None
 
 # --- Clothes Image Upload Endpoint ---
 
-@router.post("/{clothes_id}/images/", response_model=ClothesImage)
+@router.post("/upload-image", status_code=status.HTTP_201_CREATED)
 async def upload_clothes_image(
-    clothes_id: int,
     file: UploadFile = File(...),
+    clothes_id: Optional[int] = Form(None),
+    is_primary: bool = Form(False),
     db: Session = Depends(deps.get_db),
-    current_user: models.User = Depends(deps.get_active_user),
-    # request: Request # 如果需要构造完整 URL，可以取消注释
+    current_user: User = Depends(deps.get_current_user)
 ):
     """
-    Upload an image for a specific clothes item, remove background, and save it.
+    上传服装图片
+    
+    1. 通过multipart/form-data上传图片文件
+    2. 可选关联到已有服装(clothes_id)或后续关联
+    3. 支持设置是否为主图(is_primary)
+    4. 自动创建目录并生成唯一文件名
     """
-    # 1. Verify clothes item exists and belongs to the user
-    # 使用导入的 crud_clothes
-    db_clothes = crud_clothes.get(db=db, id=clothes_id)
-    if not db_clothes:
-        raise HTTPException(status_code=404, detail="Clothes not found")
-    if db_clothes.user_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Not enough permissions to add image to this item")
-
-    # 2. Read image contents
-    contents = await file.read()
-    if not contents:
-        raise HTTPException(status_code=400, detail="Empty file uploaded")
-
-    try:
-        # 3. Remove background using rembg
-        output_bytes = remove(contents)
-
-        # --- Optional: Ensure background is white if needed ---
-        # If rembg outputs transparent PNG, and you want white BG:
-        # try:
-        #     img = Image.open(io.BytesIO(output_bytes)).convert("RGBA")
-        #     bg = Image.new("RGB", img.size, (255, 255, 255))
-        #     bg.paste(img, (0, 0), img)
-        #     output_buffer = io.BytesIO()
-        #     bg.save(output_buffer, format='PNG') # Or JPEG if preferred
-        #     output_bytes = output_buffer.getvalue()
-        #     file_extension = ".png" # Or ".jpg"
-        # except Exception as pil_err:
-        #     print(f"Pillow processing failed: {pil_err}. Saving original rembg output.")
-        #     file_extension = ".png" # Default back to png
-        # --- End Optional ---
-        # If keeping transparent background from rembg:
-        file_extension = ".png"
-
-
-        # 4. Generate unique filename and save the processed image
-        unique_filename = f"{uuid.uuid4()}{file_extension}"
-        processed_image_path = os.path.join(PROCESSED_IMAGE_STORAGE_PATH, unique_filename)
-
-        with open(processed_image_path, "wb") as f:
-            f.write(output_bytes)
-
-        # 5. Construct the relative image URL path
-        relative_image_path = os.path.relpath(processed_image_path, settings.LOCAL_STORAGE_PATH)
-        image_url_path = f"/storage/{relative_image_path.replace('\\', '/')}"
-
-        # --- 如果需要完整 URL ---
-        # if request:
-        #     base_url = str(request.base_url) # e.g., http://127.0.0.1:8000/
-        #     # 确保 base_url 以 / 结尾
-        #     if not base_url.endswith('/'):
-        #         base_url += '/'
-        #     # image_url 需要去掉开头的 /
-        #     full_image_url = f"{base_url.rstrip('/')}{image_url_path}"
-        # else:
-        #     full_image_url = image_url_path # Fallback or raise error
-        # -----------------------
-
-        # 6. Create ClothesImage record in the database
-        is_primary = not db_clothes.images
-
-        # 使用导入的 ClothesImageCreate 和 crud_clothes_image
-        # 注意：如果 image_url 类型是 HttpUrl，需要传入 full_image_url
-        image_in = ClothesImageCreate(image_url=image_url_path, is_primary=is_primary)
-        db_image = crud_clothes_image.create_with_clothes(db=db, obj_in=image_in, clothes_id=clothes_id)
-
-        return db_image
-
-    except Exception as e:
-        # Log the error for debugging
-        print(f"Error processing or saving image for clothes {clothes_id}: {e}")
-        # Consider removing the partially saved file if applicable
-        if 'processed_image_path' in locals() and os.path.exists(processed_image_path):
-             try:
-                 os.remove(processed_image_path)
-             except OSError:
-                 pass # Ignore error during cleanup
-        raise HTTPException(status_code=500, detail=f"Failed to process image background: {str(e)}")
-    finally:
-        await file.close()
+    # 1. 验证图片格式
+    allowed_types = ["image/jpeg", "image/png", "image/jpg"]
+    if file.content_type not in allowed_types:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="只支持JPG和PNG格式图片"
+        )
+    
+    # 2. 验证clothes_id(如果提供了)
+    if clothes_id:
+        clothes = db.query(Clothes).filter(
+            Clothes.id == clothes_id,
+            Clothes.user_id == current_user.id
+        ).first()
+        
+        if not clothes:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="找不到指定服装或无权限"
+            )
+    
+    # 3. 创建存储路径和文件名
+    today = datetime.now().strftime("%Y%m%d")
+    user_dir = f"user_{current_user.id}"
+    save_dir = os.path.join(settings.IMAGE_STORAGE_PATH, "processed", user_dir, today)
+    
+    # 确保目录存在
+    os.makedirs(save_dir, exist_ok=True)
+    
+    # 生成唯一文件名
+    file_ext = os.path.splitext(file.filename)[1]
+    unique_filename = f"{uuid.uuid4().hex}{file_ext}"
+    file_path = os.path.join(save_dir, unique_filename)
+    relative_path = os.path.join("processed", user_dir, today, unique_filename)
+    
+    # 4. 保存文件
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    
+    # 5. 如果提供了clothes_id，创建图片记录
+    if clothes_id:
+        # 如果设置为主图，先将其他图片设为非主图
+        if is_primary:
+            db.query(ClothesImage).filter(
+                ClothesImage.clothes_id == clothes_id,
+                ClothesImage.is_primary == True
+            ).update({"is_primary": False})
+        
+        # 创建新图片记录
+        clothes_image = ClothesImage(
+            clothes_id=clothes_id,
+            image_url=relative_path,
+            is_primary=is_primary
+        )
+        db.add(clothes_image)
+        db.commit()
+        db.refresh(clothes_image)
+        
+        return {
+            "id": clothes_image.id,
+            "clothes_id": clothes_id,
+            "image_url": f"/storage/images/{relative_path}",
+            "is_primary": is_primary,
+            "filename": file.filename,
+            "file_size": file.size
+        }
+    
+    # 6. 如果没有clothes_id，仅返回保存的路径信息
+    return {
+        "image_url": f"/storage/images/{relative_path}",
+        "filename": file.filename,
+        "file_size": file.size,
+        "message": "图片上传成功，使用返回的URL创建服装"
+    }
 
 # --- Add other image related endpoints like get_images, delete_image etc. later --- 

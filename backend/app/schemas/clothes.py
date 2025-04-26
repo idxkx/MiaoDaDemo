@@ -93,4 +93,23 @@ class ClothesSimple(BaseModel):
 
     class Config:
         orm_mode = True
-        # Pydantic V2: from_attributes = True 
+        # Pydantic V2: from_attributes = True
+
+# ==================== Clothes Response Schema ====================
+
+class ClothesResponse(ClothesBase):
+    """服装完整响应模型，用于API响应"""
+    id: int
+    user_id: int
+    ai_tags: Optional[List[str]] = None
+    ai_category_confidence: Optional[float] = None
+    is_ai_categorized: bool = False
+    is_active: bool = True
+    wear_count: int = 0
+    images: List[ClothesImage] = []
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        orm_mode = True # Pydantic V1 的配置方式
+        # from_attributes = True  # Pydantic V2 
