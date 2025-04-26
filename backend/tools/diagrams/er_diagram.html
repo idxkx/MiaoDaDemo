@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能穿搭助手数据库ER图</title>
+    <script src="lib/echarts.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        .header {
+            background-color: #333;
+            color: white;
+            padding: 15px 20px;
+            text-align: center;
+        }
+        .content {
+            flex: 1;
+            display: flex;
+        }
+        #er-chart {
+            width: 100%;
+            height: 100%;
+            min-height: 800px;
+        }
+        .legend {
+            position: absolute;
+            top: 70px;
+            left: 20px;
+            background: rgba(255,255,255,0.8);
+            border-radius: 5px;
+            padding: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            z-index: 100;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .legend-color {
+            width: 20px;
+            height: 3px;
+            margin-right: 10px;
+        }
+        .one-to-many {
+            background-color: #5470c6;
+        }
+        .many-to-many {
+            background-color: #91cc75;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>智能穿搭助手数据库ER图</h1>
+        </div>
+        <div class="content">
+            <div id="er-chart"></div>
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color one-to-many"></div>
+                    <span>一对多关系</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color many-to-many"></div>
+                    <span>多对多关系</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var chartDom = document.getElementById('er-chart');
+        var myChart = echarts.init(chartDom);
+        var option;
+
+        // 实体数据
+        var categories = [
+            {name: '实体'}
+        ];
+        
+        var nodes = [{"id": "ClothesType", "name": "ClothesType", "symbolSize": 80, "itemStyle": {"color": "#9A60B4"}, "fields": [], "category": 0}, {"id": "Clothes", "name": "Clothes", "symbolSize": 80, "itemStyle": {"color": "#91CC75"}, "fields": [{"name": "id", "type": "Integer", "primary_key": true, "foreign_key": false}, {"name": "user_id", "type": "Integer", "primary_key": false, "foreign_key": true}, {"name": "name", "type": "String(100)", "primary_key": false, "foreign_key": false}, {"name": "description", "type": "Text", "primary_key": false, "foreign_key": false}, {"name": "category", "type": "String(50)", "primary_key": false, "foreign_key": false}, {"name": "sub_category", "type": "String(50)", "primary_key": false, "foreign_key": false}, {"name": "color", "type": "String(50)", "primary_key": false, "foreign_key": false}, {"name": "pattern", "type": "String(50)", "primary_key": false, "foreign_key": false}, {"name": "material", "type": "String(50)", "primary_key": false, "foreign_key": false}, {"name": "season", "type": "String(50)", "primary_key": false, "foreign_key": false}, {"name": "occasion", "type": "String(50)", "primary_key": false, "foreign_key": false}, {"name": "brand", "type": "String(100)", "primary_key": false, "foreign_key": false}, {"name": "ai_features", "type": "MutableList.as_mutable(ARRAY(Float))", "primary_key": false, "foreign_key": false}, {"name": "ai_tags", "type": "ARRAY(String)", "primary_key": false, "foreign_key": false}, {"name": "ai_category_confidence", "type": "Float", "primary_key": false, "foreign_key": false}, {"name": "is_ai_categorized", "type": "Boolean", "primary_key": false, "foreign_key": false}, {"name": "is_active", "type": "Boolean", "primary_key": false, "foreign_key": false}, {"name": "is_favorite", "type": "Boolean", "primary_key": false, "foreign_key": false}, {"name": "wear_count", "type": "Integer", "primary_key": false, "foreign_key": false}, {"name": "created_at", "type": "DateTime", "primary_key": false, "foreign_key": false}, {"name": "updated_at", "type": "DateTime", "primary_key": false, "foreign_key": false}], "category": 0}, {"id": "ClothesImage", "name": "ClothesImage", "symbolSize": 80, "itemStyle": {"color": "#5470C6"}, "fields": [{"name": "id", "type": "Integer", "primary_key": true, "foreign_key": false}, {"name": "clothes_id", "type": "Integer", "primary_key": false, "foreign_key": true}, {"name": "image_url", "type": "String(255))  # \u56fe\u7247URL\uff0c\u6307\u5411\u5b58\u50a8\u670d\u52a1(\u5982AWS S3\u3001\u4e03\u725b\u4e91\u7b49)\u4e2d\u7684\u56fe\u7247\u8d44\u6e90", "primary_key": false, "foreign_key": false}, {"name": "is_primary", "type": "Boolean", "primary_key": false, "foreign_key": false}, {"name": "created_at", "type": "DateTime", "primary_key": false, "foreign_key": false}, {"name": "updated_at", "type": "DateTime", "primary_key": false, "foreign_key": false}], "category": 0}, {"id": "Outfit", "name": "Outfit", "symbolSize": 80, "itemStyle": {"color": "#3BA272"}, "fields": [{"name": "id", "type": "Integer", "primary_key": true, "foreign_key": false}, {"name": "user_id", "type": "Integer", "primary_key": false, "foreign_key": true}, {"name": "name", "type": "String(100)", "primary_key": false, "foreign_key": false}, {"name": "description", "type": "Text", "primary_key": false, "foreign_key": false}, {"name": "occasion", "type": "String(50)", "primary_key": false, "foreign_key": false}, {"name": "style", "type": "String(50)", "primary_key": false, "foreign_key": false}, {"name": "season", "type": "String(50)", "primary_key": false, "foreign_key": false}, {"name": "weather", "type": "String(50)", "primary_key": false, "foreign_key": false}, {"name": "ai_suggestions", "type": "MutableDict.as_mutable(JSON)", "primary_key": false, "foreign_key": false}, {"name": "is_ai_generated", "type": "Boolean", "primary_key": false, "foreign_key": false}, {"name": "ai_score", "type": "Float", "primary_key": false, "foreign_key": false}, {"name": "is_favorite", "type": "Boolean", "primary_key": false, "foreign_key": false}, {"name": "wear_count", "type": "Integer", "primary_key": false, "foreign_key": false}, {"name": "last_worn_date", "type": "DateTime", "primary_key": false, "foreign_key": false}, {"name": "created_at", "type": "DateTime", "primary_key": false, "foreign_key": false}, {"name": "updated_at", "type": "DateTime", "primary_key": false, "foreign_key": false}], "category": 0}, {"id": "OutfitItem", "name": "OutfitItem", "symbolSize": 80, "itemStyle": {"color": "#FC8452"}, "fields": [{"name": "id", "type": "Integer", "primary_key": true, "foreign_key": false}, {"name": "outfit_id", "type": "Integer", "primary_key": false, "foreign_key": true}, {"name": "clothes_id", "type": "Integer", "primary_key": false, "foreign_key": true}, {"name": "position", "type": "Integer", "primary_key": false, "foreign_key": false}, {"name": "layer", "type": "Integer", "primary_key": false, "foreign_key": false}, {"name": "notes", "type": "Text", "primary_key": false, "foreign_key": false}, {"name": "styling_tips", "type": "Text", "primary_key": false, "foreign_key": false}, {"name": "created_at", "type": "DateTime", "primary_key": false, "foreign_key": false}, {"name": "updated_at", "type": "DateTime", "primary_key": false, "foreign_key": false}], "category": 0}, {"id": "Outfit", "name": "Outfit", "symbolSize": 80, "itemStyle": {"color": "#3BA272"}, "fields": [{"name": "id", "type": "Integer", "primary_key": true, "foreign_key": false}, {"name": "user_id", "type": "Integer", "primary_key": false, "foreign_key": true}, {"name": "name", "type": "String(100))  # \u7a7f\u642d\u540d\u79f0", "primary_key": false, "foreign_key": false}, {"name": "description", "type": "Text", "primary_key": false, "foreign_key": false}, {"name": "season", "type": "String(50)", "primary_key": false, "foreign_key": false}, {"name": "occasion", "type": "String(100)", "primary_key": false, "foreign_key": false}, {"name": "style", "type": "String(100)", "primary_key": false, "foreign_key": false}, {"name": "image_url", "type": "String(255)", "primary_key": false, "foreign_key": false}, {"name": "is_favorite", "type": "Boolean", "primary_key": false, "foreign_key": false}, {"name": "created_at", "type": "DateTime", "primary_key": false, "foreign_key": false}, {"name": "updated_at", "type": "DateTime", "primary_key": false, "foreign_key": false}], "category": 0}, {"id": "OutfitClothes", "name": "OutfitClothes", "symbolSize": 80, "itemStyle": {"color": "#9A60B4"}, "fields": [{"name": "id", "type": "Integer", "primary_key": true, "foreign_key": false}, {"name": "outfit_id", "type": "Integer", "primary_key": false, "foreign_key": true}, {"name": "clothes_id", "type": "Integer", "primary_key": false, "foreign_key": true}, {"name": "position", "type": "String(50)", "primary_key": false, "foreign_key": false}, {"name": "order", "type": "Integer", "primary_key": false, "foreign_key": false}, {"name": "created_at", "type": "DateTime", "primary_key": false, "foreign_key": false}, {"name": "updated_at", "type": "DateTime", "primary_key": false, "foreign_key": false}], "category": 0}, {"id": "Tag", "name": "Tag", "symbolSize": 80, "itemStyle": {"color": "#EE6666"}, "fields": [{"name": "id", "type": "Integer", "primary_key": true, "foreign_key": false}, {"name": "name", "type": "String(50)", "primary_key": false, "foreign_key": false}, {"name": "category", "type": "String(50)", "primary_key": false, "foreign_key": false}, {"name": "is_system", "type": "Boolean", "primary_key": false, "foreign_key": false}, {"name": "description", "type": "Text", "primary_key": false, "foreign_key": false}, {"name": "display_order", "type": "Integer", "primary_key": false, "foreign_key": false}, {"name": "created_at", "type": "DateTime", "primary_key": false, "foreign_key": false}, {"name": "updated_at", "type": "DateTime", "primary_key": false, "foreign_key": false}], "category": 0}, {"id": "ClothesTag", "name": "ClothesTag", "symbolSize": 80, "itemStyle": {"color": "#73C0DE"}, "fields": [{"name": "id", "type": "Integer", "primary_key": true, "foreign_key": false}, {"name": "clothes_id", "type": "Integer", "primary_key": false, "foreign_key": true}, {"name": "tag_id", "type": "Integer", "primary_key": false, "foreign_key": true}, {"name": "is_ai_generated", "type": "Boolean", "primary_key": false, "foreign_key": false}, {"name": "confidence", "type": "Float", "primary_key": false, "foreign_key": false}, {"name": "created_at", "type": "DateTime", "primary_key": false, "foreign_key": false}, {"name": "updated_at", "type": "DateTime", "primary_key": false, "foreign_key": false}], "category": 0}, {"id": "User", "name": "User", "symbolSize": 80, "itemStyle": {"color": "#FAC858"}, "fields": [{"name": "id", "type": "Integer", "primary_key": true, "foreign_key": false}, {"name": "openid", "type": "String(100)", "primary_key": false, "foreign_key": false}, {"name": "nickname", "type": "String(50)", "primary_key": false, "foreign_key": false}, {"name": "avatar_url", "type": "String(255)", "primary_key": false, "foreign_key": false}, {"name": "gender", "type": "Integer", "primary_key": false, "foreign_key": false}, {"name": "phone", "type": "String(20)", "primary_key": false, "foreign_key": false}, {"name": "is_active", "type": "Boolean", "primary_key": false, "foreign_key": false}, {"name": "is_admin", "type": "Boolean", "primary_key": false, "foreign_key": false}, {"name": "style_preference", "type": "MutableDict.as_mutable(JSON)", "primary_key": false, "foreign_key": false}, {"name": "color_preference", "type": "MutableDict.as_mutable(JSON)", "primary_key": false, "foreign_key": false}, {"name": "season_preference", "type": "MutableDict.as_mutable(JSON)", "primary_key": false, "foreign_key": false}, {"name": "last_login_at", "type": "DateTime", "primary_key": false, "foreign_key": false}, {"name": "login_count", "type": "Integer", "primary_key": false, "foreign_key": false}, {"name": "created_at", "type": "DateTime", "primary_key": false, "foreign_key": false}, {"name": "updated_at", "type": "DateTime", "primary_key": false, "foreign_key": false}], "category": 0}, {"id": "User", "name": "User", "symbolSize": 80, "itemStyle": {"color": "#FAC858"}, "fields": [{"name": "id", "type": "Integer", "primary_key": true, "foreign_key": false}, {"name": "username", "type": "String(50)", "primary_key": false, "foreign_key": false}, {"name": "email", "type": "String(100)", "primary_key": false, "foreign_key": false}, {"name": "hashed_password", "type": "String(100))  # \u52a0\u5bc6\u540e\u7684\u5bc6\u7801", "primary_key": false, "foreign_key": false}, {"name": "full_name", "type": "String(100)", "primary_key": false, "foreign_key": false}, {"name": "bio", "type": "Text", "primary_key": false, "foreign_key": false}, {"name": "avatar_url", "type": "String(255)", "primary_key": false, "foreign_key": false}, {"name": "is_active", "type": "Boolean", "primary_key": false, "foreign_key": false}, {"name": "is_superuser", "type": "Boolean", "primary_key": false, "foreign_key": false}, {"name": "created_at", "type": "DateTime", "primary_key": false, "foreign_key": false}, {"name": "updated_at", "type": "DateTime", "primary_key": false, "foreign_key": false}], "category": 0}];
+        var edges = [{"id": "edge1", "source": "Clothes", "target": "users", "description": "\u5916\u952e\u5173\u7cfb: Clothes.user_id -> users.id", "lineStyle": {"color": "#5470C6"}, "label": {"show": true, "formatter": "N:1", "fontSize": 12}}, {"id": "edge2", "source": "Clothes", "target": "User", "description": "\u5173\u7cfb: Clothes.user -> User (\u4e00\u5bf9\u591a)", "lineStyle": {"color": "#5470C6", "type": "solid"}, "label": {"show": true, "formatter": "1:N", "fontSize": 12}}, {"id": "edge3", "source": "Clothes", "target": "ClothesImage", "description": "\u5173\u7cfb: Clothes.images -> ClothesImage (\u4e00\u5bf9\u591a)", "lineStyle": {"color": "#5470C6", "type": "solid"}, "label": {"show": true, "formatter": "1:N", "fontSize": 12}}, {"id": "edge4", "source": "Clothes", "target": "ClothesTag", "description": "\u5173\u7cfb: Clothes.clothes_tags -> ClothesTag (\u4e00\u5bf9\u591a)", "lineStyle": {"color": "#5470C6", "type": "solid"}, "label": {"show": true, "formatter": "1:N", "fontSize": 12}}, {"id": "edge5", "source": "Clothes", "target": "OutfitItem", "description": "\u5173\u7cfb: Clothes.outfit_items -> OutfitItem (\u4e00\u5bf9\u591a)", "lineStyle": {"color": "#5470C6", "type": "solid"}, "label": {"show": true, "formatter": "1:N", "fontSize": 12}}, {"id": "edge6", "source": "ClothesImage", "target": "clothes", "description": "\u5916\u952e\u5173\u7cfb: ClothesImage.clothes_id -> clothes.id", "lineStyle": {"color": "#5470C6"}, "label": {"show": true, "formatter": "N:1", "fontSize": 12}}, {"id": "edge7", "source": "ClothesImage", "target": "Clothes", "description": "\u5173\u7cfb: ClothesImage.clothes -> Clothes (\u4e00\u5bf9\u591a)", "lineStyle": {"color": "#5470C6", "type": "solid"}, "label": {"show": true, "formatter": "1:N", "fontSize": 12}}, {"id": "edge8", "source": "Outfit", "target": "users", "description": "\u5916\u952e\u5173\u7cfb: Outfit.user_id -> users.id", "lineStyle": {"color": "#5470C6"}, "label": {"show": true, "formatter": "N:1", "fontSize": 12}}, {"id": "edge9", "source": "Outfit", "target": "User", "description": "\u5173\u7cfb: Outfit.user -> User (\u4e00\u5bf9\u591a)", "lineStyle": {"color": "#5470C6", "type": "solid"}, "label": {"show": true, "formatter": "1:N", "fontSize": 12}}, {"id": "edge10", "source": "Outfit", "target": "OutfitItem", "description": "\u5173\u7cfb: Outfit.outfit_items -> OutfitItem (\u4e00\u5bf9\u591a)", "lineStyle": {"color": "#5470C6", "type": "solid"}, "label": {"show": true, "formatter": "1:N", "fontSize": 12}}, {"id": "edge11", "source": "OutfitItem", "target": "outfits", "description": "\u5916\u952e\u5173\u7cfb: OutfitItem.outfit_id -> outfits.id", "lineStyle": {"color": "#5470C6"}, "label": {"show": true, "formatter": "N:1", "fontSize": 12}}, {"id": "edge12", "source": "OutfitItem", "target": "clothes", "description": "\u5916\u952e\u5173\u7cfb: OutfitItem.clothes_id -> clothes.id", "lineStyle": {"color": "#5470C6"}, "label": {"show": true, "formatter": "N:1", "fontSize": 12}}, {"id": "edge13", "source": "OutfitItem", "target": "Outfit", "description": "\u5173\u7cfb: OutfitItem.outfit -> Outfit (\u4e00\u5bf9\u591a)", "lineStyle": {"color": "#5470C6", "type": "solid"}, "label": {"show": true, "formatter": "1:N", "fontSize": 12}}, {"id": "edge14", "source": "OutfitItem", "target": "Clothes", "description": "\u5173\u7cfb: OutfitItem.clothes -> Clothes (\u4e00\u5bf9\u591a)", "lineStyle": {"color": "#5470C6", "type": "solid"}, "label": {"show": true, "formatter": "1:N", "fontSize": 12}}, {"id": "edge15", "source": "Outfit", "target": "users", "description": "\u5916\u952e\u5173\u7cfb: Outfit.user_id -> users.id\", ondelete=\"CASCADE", "lineStyle": {"color": "#5470C6"}, "label": {"show": true, "formatter": "N:1", "fontSize": 12}}, {"id": "edge16", "source": "Outfit", "target": "User", "description": "\u5173\u7cfb: Outfit.user -> User (\u4e00\u5bf9\u591a)", "lineStyle": {"color": "#5470C6", "type": "solid"}, "label": {"show": true, "formatter": "1:N", "fontSize": 12}}, {"id": "edge17", "source": "Outfit", "target": "OutfitClothes", "description": "\u5173\u7cfb: Outfit.outfit_clothes -> OutfitClothes (\u4e00\u5bf9\u591a)", "lineStyle": {"color": "#5470C6", "type": "solid"}, "label": {"show": true, "formatter": "1:N", "fontSize": 12}}, {"id": "edge18", "source": "OutfitClothes", "target": "outfits", "description": "\u5916\u952e\u5173\u7cfb: OutfitClothes.outfit_id -> outfits.id\", ondelete=\"CASCADE", "lineStyle": {"color": "#5470C6"}, "label": {"show": true, "formatter": "N:1", "fontSize": 12}}, {"id": "edge19", "source": "OutfitClothes", "target": "clothes", "description": "\u5916\u952e\u5173\u7cfb: OutfitClothes.clothes_id -> clothes.id\", ondelete=\"CASCADE", "lineStyle": {"color": "#5470C6"}, "label": {"show": true, "formatter": "N:1", "fontSize": 12}}, {"id": "edge20", "source": "OutfitClothes", "target": "Outfit", "description": "\u5173\u7cfb: OutfitClothes.outfit -> Outfit (\u4e00\u5bf9\u591a)", "lineStyle": {"color": "#5470C6", "type": "solid"}, "label": {"show": true, "formatter": "1:N", "fontSize": 12}}, {"id": "edge21", "source": "OutfitClothes", "target": "Clothes", "description": "\u5173\u7cfb: OutfitClothes.clothes -> Clothes (\u4e00\u5bf9\u591a)", "lineStyle": {"color": "#5470C6", "type": "solid"}, "label": {"show": true, "formatter": "1:N", "fontSize": 12}}, {"id": "edge22", "source": "Tag", "target": "ClothesTag", "description": "\u5173\u7cfb: Tag.clothes_tags -> ClothesTag (\u4e00\u5bf9\u591a)", "lineStyle": {"color": "#5470C6", "type": "solid"}, "label": {"show": true, "formatter": "1:N", "fontSize": 12}}, {"id": "edge23", "source": "ClothesTag", "target": "clothes", "description": "\u5916\u952e\u5173\u7cfb: ClothesTag.clothes_id -> clothes.id", "lineStyle": {"color": "#5470C6"}, "label": {"show": true, "formatter": "N:1", "fontSize": 12}}, {"id": "edge24", "source": "ClothesTag", "target": "tags", "description": "\u5916\u952e\u5173\u7cfb: ClothesTag.tag_id -> tags.id", "lineStyle": {"color": "#5470C6"}, "label": {"show": true, "formatter": "N:1", "fontSize": 12}}, {"id": "edge25", "source": "ClothesTag", "target": "Clothes", "description": "\u5173\u7cfb: ClothesTag.clothes -> Clothes (\u4e00\u5bf9\u591a)", "lineStyle": {"color": "#5470C6", "type": "solid"}, "label": {"show": true, "formatter": "1:N", "fontSize": 12}}, {"id": "edge26", "source": "ClothesTag", "target": "Tag", "description": "\u5173\u7cfb: ClothesTag.tag -> Tag (\u4e00\u5bf9\u591a)", "lineStyle": {"color": "#5470C6", "type": "solid"}, "label": {"show": true, "formatter": "1:N", "fontSize": 12}}, {"id": "edge27", "source": "User", "target": "Clothes", "description": "\u5173\u7cfb: User.clothes -> Clothes (\u4e00\u5bf9\u591a)", "lineStyle": {"color": "#5470C6", "type": "solid"}, "label": {"show": true, "formatter": "1:N", "fontSize": 12}}, {"id": "edge28", "source": "User", "target": "Outfit", "description": "\u5173\u7cfb: User.outfits -> Outfit (\u4e00\u5bf9\u591a)", "lineStyle": {"color": "#5470C6", "type": "solid"}, "label": {"show": true, "formatter": "1:N", "fontSize": 12}}, {"id": "edge29", "source": "User", "target": "Clothes", "description": "\u5173\u7cfb: User.clothes -> Clothes (\u4e00\u5bf9\u591a)", "lineStyle": {"color": "#5470C6", "type": "solid"}, "label": {"show": true, "formatter": "1:N", "fontSize": 12}}, {"id": "edge30", "source": "User", "target": "Outfit", "description": "\u5173\u7cfb: User.outfits -> Outfit (\u4e00\u5bf9\u591a)", "lineStyle": {"color": "#5470C6", "type": "solid"}, "label": {"show": true, "formatter": "1:N", "fontSize": 12}}];
+        
+        option = {
+            backgroundColor: '#f5f5f5',
+            tooltip: {
+                trigger: 'item',
+                formatter: function (params) {
+                    if (params.dataType === 'edge') {
+                        return params.data.description;
+                    } else {
+                        var fields = params.data.fields || [];
+                        var tooltip = '<div style="font-weight:bold;border-bottom:1px solid #ccc;padding-bottom:5px;margin-bottom:5px;">' + 
+                                     params.data.name + '</div>';
+                        
+                        fields.forEach(function(field) {
+                            var pk = field.primary_key ? ' <span style="color:red;">PK</span>' : '';
+                            var fk = field.foreign_key ? ' <span style="color:blue;">FK</span>' : '';
+                            tooltip += '<div>' + field.name + ': ' + field.type + pk + fk + '</div>';
+                        });
+                        
+                        return tooltip;
+                    }
+                }
+            },
+            legend: {
+                show: false,
+                data: categories.map(function (a) {
+                    return a.name;
+                })
+            },
+            series: [
+                {
+                    type: 'graph',
+                    layout: 'force',
+                    animation: true,
+                    draggable: true,
+                    data: nodes,
+                    categories: categories,
+                    force: {
+                        initLayout: 'circular',
+                        repulsion: 3000,
+                        gravity: 0.1,
+                        edgeLength: 200,
+                        layoutAnimation: true
+                    },
+                    edges: edges,
+                    emphasis: {
+                        focus: 'adjacency',
+                        lineStyle: {
+                            width: 4
+                        }
+                    },
+                    roam: true,
+                    label: {
+                        show: true,
+                        position: 'inside',
+                        formatter: function(params) {
+                            return params.data.name;
+                        },
+                        color: '#000',
+                        fontWeight: 'bold',
+                        backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                        padding: [3, 5]
+                    },
+                    labelLayout: {
+                        hideOverlap: false
+                    },
+                    scaleLimit: {
+                        min: 0.1,
+                        max: 5
+                    },
+                    lineStyle: {
+                        color: 'source',
+                        curveness: 0.3,
+                        width: 1.5
+                    },
+                    edgeSymbol: ['none', 'arrow'],
+                    edgeSymbolSize: [0, 10],
+                    // 设置节点为矩形，更符合ER图表示
+                    symbol: 'rect',
+                    symbolSize: function(value, params) {
+                        // 根据字段数量调整矩形大小
+                        var fields = params.data.fields || [];
+                        return [120, Math.max(60, 20 + fields.length * 5)];
+                    }
+                }
+            ]
+        };
+
+        // 立即完成初始布局
+        myChart.setOption(option);
+        
+        // 强制重新计算和渲染
+        setTimeout(function() {
+            myChart.setOption({
+                series: [{
+                    force: {
+                        layoutAnimation: false
+                    }
+                }]
+            });
+            myChart.resize();
+        }, 500);
+        
+        // 自适应窗口大小
+        window.addEventListener('resize', function() {
+            myChart.resize();
+        });
+        
+        // 添加错误处理
+        window.onerror = function(message, source, lineno, colno, error) {
+            console.error('ECharts错误:', message);
+            alert('加载图表错误: ' + message);
+            return true;
+        };
+    </script>
+</body>
+</html>

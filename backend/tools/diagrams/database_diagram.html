@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据库关系图</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.0/dist/mermaid.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        .model-section {
+            margin-bottom: 30px;
+        }
+        .mermaid {
+            margin: 20px 0;
+            overflow: auto;
+        }
+        .table-details {
+            margin-top: 30px;
+        }
+        .table-section {
+            margin-bottom: 20px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 15px;
+        }
+        .table-section h3 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>智能穿搭助手数据库关系图</h1>
+        
+        <div class="model-section">
+            <h2>实体关系图</h2>
+            <div class="mermaid">
+                erDiagram
+    ClothesType {
+    }
+    Clothes {
+        Integer id "主键 索引"
+        Integer user_id "索引 外键 -> users.id"
+        String(100) name "索引"
+        Text description ""
+        String(50) category "索引"
+        String(50) sub_category "索引"
+        String(50) color "索引"
+        String(50) pattern "索引"
+        String(50) material "索引"
+        String(50) season "索引"
+        String(50) occasion "索引"
+        String(100) brand "索引"
+        MutableList.as_mutable(ARRAY(Float)) ai_features ""
+        ARRAY(String) ai_tags ""
+        Float ai_category_confidence ""
+        Boolean is_ai_categorized ""
+        Boolean is_active ""
+        Boolean is_favorite ""
+        Integer wear_count ""
+        DateTime created_at ""
+        DateTime updated_at ""
+    }
+    ClothesImage {
+        Integer id "主键 索引"
+        Integer clothes_id "索引 外键 -> clothes.id"
+        String(255))  # 图片URL，指向存储服务(如AWS S3、七牛云等)中的图片资源 image_url ""
+        Boolean is_primary ""
+        DateTime created_at ""
+        DateTime updated_at ""
+    }
+    Outfit {
+        Integer id "主键 索引"
+        Integer user_id "索引 外键 -> users.id"
+        String(100) name "索引"
+        Text description ""
+        String(50) occasion "索引"
+        String(50) style "索引"
+        String(50) season "索引"
+        String(50) weather "索引"
+        MutableDict.as_mutable(JSON) ai_suggestions ""
+        Boolean is_ai_generated ""
+        Float ai_score ""
+        Boolean is_favorite ""
+        Integer wear_count ""
+        DateTime last_worn_date ""
+        DateTime created_at ""
+        DateTime updated_at ""
+    }
+    OutfitItem {
+        Integer id "主键 索引"
+        Integer outfit_id "索引 外键 -> outfits.id"
+        Integer clothes_id "索引 外键 -> clothes.id"
+        Integer position ""
+        Integer layer ""
+        Text notes ""
+        Text styling_tips ""
+        DateTime created_at ""
+        DateTime updated_at ""
+    }
+    Outfit {
+        Integer id "主键 索引"
+        Integer user_id "外键 -> users.id", ondelete="CASCADE"
+        String(100))  # 穿搭名称 name ""
+        Text description ""
+        String(50) season ""
+        String(100) occasion ""
+        String(100) style ""
+        String(255) image_url ""
+        Boolean is_favorite ""
+        DateTime created_at ""
+        DateTime updated_at ""
+    }
+    OutfitClothes {
+        Integer id "主键 索引"
+        Integer outfit_id "外键 -> outfits.id", ondelete="CASCADE"
+        Integer clothes_id "外键 -> clothes.id", ondelete="CASCADE"
+        String(50) position ""
+        Integer order ""
+        DateTime created_at ""
+        DateTime updated_at ""
+    }
+    Tag {
+        Integer id "主键 索引"
+        String(50) name "索引 唯一"
+        String(50) category "索引"
+        Boolean is_system ""
+        Text description ""
+        Integer display_order ""
+        DateTime created_at ""
+        DateTime updated_at ""
+    }
+    ClothesTag {
+        Integer id "主键 索引"
+        Integer clothes_id "索引 外键 -> clothes.id"
+        Integer tag_id "索引 外键 -> tags.id"
+        Boolean is_ai_generated ""
+        Float confidence ""
+        DateTime created_at ""
+        DateTime updated_at ""
+    }
+    User {
+        Integer id "主键 索引"
+        String(100) openid "索引 唯一"
+        String(50) nickname "索引"
+        String(255) avatar_url ""
+        Integer gender ""
+        String(20) phone ""
+        Boolean is_active ""
+        Boolean is_admin ""
+        MutableDict.as_mutable(JSON) style_preference ""
+        MutableDict.as_mutable(JSON) color_preference ""
+        MutableDict.as_mutable(JSON) season_preference ""
+        DateTime last_login_at ""
+        Integer login_count ""
+        DateTime created_at ""
+        DateTime updated_at ""
+    }
+    User {
+        Integer id "主键 索引"
+        String(50) username "索引 唯一"
+        String(100) email "索引 唯一"
+        String(100))  # 加密后的密码 hashed_password ""
+        String(100) full_name ""
+        Text bio ""
+        String(255) avatar_url ""
+        Boolean is_active ""
+        Boolean is_superuser ""
+        DateTime created_at ""
+        DateTime updated_at ""
+    }
+    Clothes ||--o{ User : "user"
+    Clothes ||--o{ ClothesImage : "images"
+    Clothes ||--o{ ClothesTag : "clothes_tags"
+    Clothes ||--o{ OutfitItem : "outfit_items"
+    ClothesImage ||--o{ Clothes : "clothes"
+    Outfit ||--o{ User : "user"
+    Outfit ||--o{ OutfitItem : "outfit_items"
+    OutfitItem ||--o{ Outfit : "outfit"
+    OutfitItem ||--o{ Clothes : "clothes"
+    Outfit ||--o{ OutfitClothes : "outfit_clothes"
+    OutfitClothes ||--o{ Outfit : "outfit"
+    OutfitClothes ||--o{ Clothes : "clothes"
+    Tag ||--o{ ClothesTag : "clothes_tags"
+    ClothesTag ||--o{ Clothes : "clothes"
+    ClothesTag ||--o{ Tag : "tag"
+    User ||--o{ Clothes : "clothes"
+    User ||--o{ Outfit : "outfits"
+
+            </div>
+        </div>
+        
+        <div class="table-details">
+            <h2>数据表详情</h2>
+            
+<div class="table-section">
+    <h3>ClothesType</h3>
+    <table>
+        <tr>
+            <th>列名</th>
+            <th>类型</th>
+            <th>约束</th>
+        </tr>
+        
+    </table>
+    
+    
+</div>
+
+<div class="table-section">
+    <h3>Clothes</h3>
+    <table>
+        <tr>
+            <th>列名</th>
+            <th>类型</th>
+            <th>约束</th>
+        </tr>
+        
+            <tr>
+                <td>id</td>
+                <td>Integer</td>
+                <td>主键, 索引</td>
+            </tr>
+            <tr>
+                <td>user_id</td>
+                <td>Integer</td>
+                <td>索引, 外键 -&gt; users.id</td>
+            </tr>
+            <tr>
+                <td>name</td>
+                <td>String(100)</td>
+                <td>索引</td>
+            </tr>
+            <tr>
+                <td>description</td>
+                <td>Text</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>category</td>
+                <td>String(50)</td>
+                <td>索引</td>
+            </tr>
+            <tr>
+                <td>sub_category</td>
+                <td>String(50)</td>
+                <td>索引</td>
+            </tr>
+            <tr>
+                <td>color</td>
+                <td>String(50)</td>
+                <td>索引</td>
+            </tr>
+            <tr>
+                <td>pattern</td>
+                <td>String(50)</td>
+                <td>索引</td>
+            </tr>
+            <tr>
+                <td>material</td>
+                <td>String(50)</td>
+                <td>索引</td>
+            </tr>
+            <tr>
+                <td>season</td>
+                <td>String(50)</td>
+                <td>索引</td>
+            </tr>
+            <tr>
+                <td>occasion</td>
+                <td>String(50)</td>
+                <td>索引</td>
+            </tr>
+            <tr>
+                <td>brand</td>
+                <td>String(100)</td>
+                <td>索引</td>
+            </tr>
+            <tr>
+                <td>ai_features</td>
+                <td>MutableList.as_mutable(ARRAY(Float))</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>ai_tags</td>
+                <td>ARRAY(String)</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>ai_category_confidence</td>
+                <td>Float</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>is_ai_categorized</td>
+                <td>Boolean</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>is_active</td>
+                <td>Boolean</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>is_favorite</td>
+                <td>Boolean</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>wear_count</td>
+                <td>Integer</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>created_at</td>
+                <td>DateTime</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>updated_at</td>
+                <td>DateTime</td>
+                <td></td>
+            </tr>
+    </table>
+    
+    
+    <h4>关系</h4>
+    <table>
+        <tr>
+            <th>关系名</th>
+            <th>目标表</th>
+            <th>关系类型</th>
+        </tr>
+        
+                <tr>
+                    <td>user</td>
+                    <td>User</td>
+                    <td>双向关联 (1:N)</td>
+                </tr>
+                <tr>
+                    <td>images</td>
+                    <td>ClothesImage</td>
+                    <td>双向关联 (1:N)</td>
+                </tr>
+                <tr>
+                    <td>clothes_tags</td>
+                    <td>ClothesTag</td>
+                    <td>双向关联 (1:N)</td>
+                </tr>
+                <tr>
+                    <td>outfit_items</td>
+                    <td>OutfitItem</td>
+                    <td>双向关联 (1:N)</td>
+                </tr>
+    </table>
+
+</div>
+
+<div class="table-section">
+    <h3>ClothesImage</h3>
+    <table>
+        <tr>
+            <th>列名</th>
+            <th>类型</th>
+            <th>约束</th>
+        </tr>
+        
+            <tr>
+                <td>id</td>
+                <td>Integer</td>
+                <td>主键, 索引</td>
+            </tr>
+            <tr>
+                <td>clothes_id</td>
+                <td>Integer</td>
+                <td>索引, 外键 -&gt; clothes.id</td>
+            </tr>
+            <tr>
+                <td>image_url</td>
+                <td>String(255))  # 图片URL，指向存储服务(如AWS S3、七牛云等)中的图片资源</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>is_primary</td>
+                <td>Boolean</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>created_at</td>
+                <td>DateTime</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>updated_at</td>
+                <td>DateTime</td>
+                <td></td>
+            </tr>
+    </table>
+    
+    
+    <h4>关系</h4>
+    <table>
+        <tr>
+            <th>关系名</th>
+            <th>目标表</th>
+            <th>关系类型</th>
+        </tr>
+        
+                <tr>
+                    <td>clothes</td>
+                    <td>Clothes</td>
+                    <td>双向关联 (1:N)</td>
+                </tr>
+    </table>
+
+</div>
+
+<div class="table-section">
+    <h3>Outfit</h3>
+    <table>
+        <tr>
+            <th>列名</th>
+            <th>类型</th>
+            <th>约束</th>
+        </tr>
+        
+            <tr>
+                <td>id</td>
+                <td>Integer</td>
+                <td>主键, 索引</td>
+            </tr>
+            <tr>
+                <td>user_id</td>
+                <td>Integer</td>
+                <td>索引, 外键 -&gt; users.id</td>
+            </tr>
+            <tr>
+                <td>name</td>
+                <td>String(100)</td>
+                <td>索引</td>
+            </tr>
+            <tr>
+                <td>description</td>
+                <td>Text</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>occasion</td>
+                <td>String(50)</td>
+                <td>索引</td>
+            </tr>
+            <tr>
+                <td>style</td>
+                <td>String(50)</td>
+                <td>索引</td>
+            </tr>
+            <tr>
+                <td>season</td>
+                <td>String(50)</td>
+                <td>索引</td>
+            </tr>
+            <tr>
+                <td>weather</td>
+                <td>String(50)</td>
+                <td>索引</td>
+            </tr>
+            <tr>
+                <td>ai_suggestions</td>
+                <td>MutableDict.as_mutable(JSON)</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>is_ai_generated</td>
+                <td>Boolean</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>ai_score</td>
+                <td>Float</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>is_favorite</td>
+                <td>Boolean</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>wear_count</td>
+                <td>Integer</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>last_worn_date</td>
+                <td>DateTime</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>created_at</td>
+                <td>DateTime</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>updated_at</td>
+                <td>DateTime</td>
+                <td></td>
+            </tr>
+    </table>
+    
+    
+    <h4>关系</h4>
+    <table>
+        <tr>
+            <th>关系名</th>
+            <th>目标表</th>
+            <th>关系类型</th>
+        </tr>
+        
+                <tr>
+                    <td>user</td>
+                    <td>User</td>
+                    <td>双向关联 (1:N)</td>
+                </tr>
+                <tr>
+                    <td>outfit_items</td>
+                    <td>OutfitItem</td>
+                    <td>双向关联 (1:N)</td>
+                </tr>
+    </table>
+
+</div>
+
+<div class="table-section">
+    <h3>OutfitItem</h3>
+    <table>
+        <tr>
+            <th>列名</th>
+            <th>类型</th>
+            <th>约束</th>
+        </tr>
+        
+            <tr>
+                <td>id</td>
+                <td>Integer</td>
+                <td>主键, 索引</td>
+            </tr>
+            <tr>
+                <td>outfit_id</td>
+                <td>Integer</td>
+                <td>索引, 外键 -&gt; outfits.id</td>
+            </tr>
+            <tr>
+                <td>clothes_id</td>
+                <td>Integer</td>
+                <td>索引, 外键 -&gt; clothes.id</td>
+            </tr>
+            <tr>
+                <td>position</td>
+                <td>Integer</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>layer</td>
+                <td>Integer</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>notes</td>
+                <td>Text</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>styling_tips</td>
+                <td>Text</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>created_at</td>
+                <td>DateTime</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>updated_at</td>
+                <td>DateTime</td>
+                <td></td>
+            </tr>
+    </table>
+    
+    
+    <h4>关系</h4>
+    <table>
+        <tr>
+            <th>关系名</th>
+            <th>目标表</th>
+            <th>关系类型</th>
+        </tr>
+        
+                <tr>
+                    <td>outfit</td>
+                    <td>Outfit</td>
+                    <td>双向关联 (1:N)</td>
+                </tr>
+                <tr>
+                    <td>clothes</td>
+                    <td>Clothes</td>
+                    <td>双向关联 (1:N)</td>
+                </tr>
+    </table>
+
+</div>
+
+<div class="table-section">
+    <h3>Outfit</h3>
+    <table>
+        <tr>
+            <th>列名</th>
+            <th>类型</th>
+            <th>约束</th>
+        </tr>
+        
+            <tr>
+                <td>id</td>
+                <td>Integer</td>
+                <td>主键, 索引</td>
+            </tr>
+            <tr>
+                <td>user_id</td>
+                <td>Integer</td>
+                <td>外键 -&gt; users.id&quot;, ondelete=&quot;CASCADE</td>
+            </tr>
+            <tr>
+                <td>name</td>
+                <td>String(100))  # 穿搭名称</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>description</td>
+                <td>Text</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>season</td>
+                <td>String(50)</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>occasion</td>
+                <td>String(100)</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>style</td>
+                <td>String(100)</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>image_url</td>
+                <td>String(255)</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>is_favorite</td>
+                <td>Boolean</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>created_at</td>
+                <td>DateTime</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>updated_at</td>
+                <td>DateTime</td>
+                <td></td>
+            </tr>
+    </table>
+    
+    
+    <h4>关系</h4>
+    <table>
+        <tr>
+            <th>关系名</th>
+            <th>目标表</th>
+            <th>关系类型</th>
+        </tr>
+        
+                <tr>
+                    <td>user</td>
+                    <td>User</td>
+                    <td>双向关联 (1:N)</td>
+                </tr>
+                <tr>
+                    <td>outfit_clothes</td>
+                    <td>OutfitClothes</td>
+                    <td>双向关联 (1:N)</td>
+                </tr>
+    </table>
+
+</div>
+
+<div class="table-section">
+    <h3>OutfitClothes</h3>
+    <table>
+        <tr>
+            <th>列名</th>
+            <th>类型</th>
+            <th>约束</th>
+        </tr>
+        
+            <tr>
+                <td>id</td>
+                <td>Integer</td>
+                <td>主键, 索引</td>
+            </tr>
+            <tr>
+                <td>outfit_id</td>
+                <td>Integer</td>
+                <td>外键 -&gt; outfits.id&quot;, ondelete=&quot;CASCADE</td>
+            </tr>
+            <tr>
+                <td>clothes_id</td>
+                <td>Integer</td>
+                <td>外键 -&gt; clothes.id&quot;, ondelete=&quot;CASCADE</td>
+            </tr>
+            <tr>
+                <td>position</td>
+                <td>String(50)</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>order</td>
+                <td>Integer</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>created_at</td>
+                <td>DateTime</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>updated_at</td>
+                <td>DateTime</td>
+                <td></td>
+            </tr>
+    </table>
+    
+    
+    <h4>关系</h4>
+    <table>
+        <tr>
+            <th>关系名</th>
+            <th>目标表</th>
+            <th>关系类型</th>
+        </tr>
+        
+                <tr>
+                    <td>outfit</td>
+                    <td>Outfit</td>
+                    <td>双向关联 (1:N)</td>
+                </tr>
+                <tr>
+                    <td>clothes</td>
+                    <td>Clothes</td>
+                    <td>双向关联 (1:N)</td>
+                </tr>
+    </table>
+
+</div>
+
+<div class="table-section">
+    <h3>Tag</h3>
+    <table>
+        <tr>
+            <th>列名</th>
+            <th>类型</th>
+            <th>约束</th>
+        </tr>
+        
+            <tr>
+                <td>id</td>
+                <td>Integer</td>
+                <td>主键, 索引</td>
+            </tr>
+            <tr>
+                <td>name</td>
+                <td>String(50)</td>
+                <td>索引, 唯一</td>
+            </tr>
+            <tr>
+                <td>category</td>
+                <td>String(50)</td>
+                <td>索引</td>
+            </tr>
+            <tr>
+                <td>is_system</td>
+                <td>Boolean</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>description</td>
+                <td>Text</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>display_order</td>
+                <td>Integer</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>created_at</td>
+                <td>DateTime</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>updated_at</td>
+                <td>DateTime</td>
+                <td></td>
+            </tr>
+    </table>
+    
+    
+    <h4>关系</h4>
+    <table>
+        <tr>
+            <th>关系名</th>
+            <th>目标表</th>
+            <th>关系类型</th>
+        </tr>
+        
+                <tr>
+                    <td>clothes_tags</td>
+                    <td>ClothesTag</td>
+                    <td>双向关联 (1:N)</td>
+                </tr>
+    </table>
+
+</div>
+
+<div class="table-section">
+    <h3>ClothesTag</h3>
+    <table>
+        <tr>
+            <th>列名</th>
+            <th>类型</th>
+            <th>约束</th>
+        </tr>
+        
+            <tr>
+                <td>id</td>
+                <td>Integer</td>
+                <td>主键, 索引</td>
+            </tr>
+            <tr>
+                <td>clothes_id</td>
+                <td>Integer</td>
+                <td>索引, 外键 -&gt; clothes.id</td>
+            </tr>
+            <tr>
+                <td>tag_id</td>
+                <td>Integer</td>
+                <td>索引, 外键 -&gt; tags.id</td>
+            </tr>
+            <tr>
+                <td>is_ai_generated</td>
+                <td>Boolean</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>confidence</td>
+                <td>Float</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>created_at</td>
+                <td>DateTime</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>updated_at</td>
+                <td>DateTime</td>
+                <td></td>
+            </tr>
+    </table>
+    
+    
+    <h4>关系</h4>
+    <table>
+        <tr>
+            <th>关系名</th>
+            <th>目标表</th>
+            <th>关系类型</th>
+        </tr>
+        
+                <tr>
+                    <td>clothes</td>
+                    <td>Clothes</td>
+                    <td>双向关联 (1:N)</td>
+                </tr>
+                <tr>
+                    <td>tag</td>
+                    <td>Tag</td>
+                    <td>双向关联 (1:N)</td>
+                </tr>
+    </table>
+
+</div>
+
+<div class="table-section">
+    <h3>User</h3>
+    <table>
+        <tr>
+            <th>列名</th>
+            <th>类型</th>
+            <th>约束</th>
+        </tr>
+        
+            <tr>
+                <td>id</td>
+                <td>Integer</td>
+                <td>主键, 索引</td>
+            </tr>
+            <tr>
+                <td>openid</td>
+                <td>String(100)</td>
+                <td>索引, 唯一</td>
+            </tr>
+            <tr>
+                <td>nickname</td>
+                <td>String(50)</td>
+                <td>索引</td>
+            </tr>
+            <tr>
+                <td>avatar_url</td>
+                <td>String(255)</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>gender</td>
+                <td>Integer</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>phone</td>
+                <td>String(20)</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>is_active</td>
+                <td>Boolean</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>is_admin</td>
+                <td>Boolean</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>style_preference</td>
+                <td>MutableDict.as_mutable(JSON)</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>color_preference</td>
+                <td>MutableDict.as_mutable(JSON)</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>season_preference</td>
+                <td>MutableDict.as_mutable(JSON)</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>last_login_at</td>
+                <td>DateTime</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>login_count</td>
+                <td>Integer</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>created_at</td>
+                <td>DateTime</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>updated_at</td>
+                <td>DateTime</td>
+                <td></td>
+            </tr>
+    </table>
+    
+    
+    <h4>关系</h4>
+    <table>
+        <tr>
+            <th>关系名</th>
+            <th>目标表</th>
+            <th>关系类型</th>
+        </tr>
+        
+                <tr>
+                    <td>clothes</td>
+                    <td>Clothes</td>
+                    <td>双向关联 (1:N)</td>
+                </tr>
+                <tr>
+                    <td>outfits</td>
+                    <td>Outfit</td>
+                    <td>双向关联 (1:N)</td>
+                </tr>
+    </table>
+
+</div>
+
+<div class="table-section">
+    <h3>User</h3>
+    <table>
+        <tr>
+            <th>列名</th>
+            <th>类型</th>
+            <th>约束</th>
+        </tr>
+        
+            <tr>
+                <td>id</td>
+                <td>Integer</td>
+                <td>主键, 索引</td>
+            </tr>
+            <tr>
+                <td>username</td>
+                <td>String(50)</td>
+                <td>索引, 唯一</td>
+            </tr>
+            <tr>
+                <td>email</td>
+                <td>String(100)</td>
+                <td>索引, 唯一</td>
+            </tr>
+            <tr>
+                <td>hashed_password</td>
+                <td>String(100))  # 加密后的密码</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>full_name</td>
+                <td>String(100)</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>bio</td>
+                <td>Text</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>avatar_url</td>
+                <td>String(255)</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>is_active</td>
+                <td>Boolean</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>is_superuser</td>
+                <td>Boolean</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>created_at</td>
+                <td>DateTime</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>updated_at</td>
+                <td>DateTime</td>
+                <td></td>
+            </tr>
+    </table>
+    
+    
+    <h4>关系</h4>
+    <table>
+        <tr>
+            <th>关系名</th>
+            <th>目标表</th>
+            <th>关系类型</th>
+        </tr>
+        
+                <tr>
+                    <td>clothes</td>
+                    <td>Clothes</td>
+                    <td>双向关联 (1:N)</td>
+                </tr>
+                <tr>
+                    <td>outfits</td>
+                    <td>Outfit</td>
+                    <td>双向关联 (1:N)</td>
+                </tr>
+    </table>
+
+</div>
+
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({
+            startOnLoad: true, 
+            theme: 'default',
+            securityLevel: 'loose',
+            fontSize: 16
+        });
+    </script>
+</body>
+</html>

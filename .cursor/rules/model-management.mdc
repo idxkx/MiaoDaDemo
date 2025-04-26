@@ -1,5 +1,5 @@
 ---
-description: 
+description: AI模型加载、管理与切换的规范和约定
 globs: 
 alwaysApply: false
 ---

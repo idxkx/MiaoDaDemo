@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能穿搭助手数据库ER图（优化版）</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .header {
+            background-color: #343a40;
+            color: white;
+            padding: 15px 20px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+        
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            background-color: #f1f3f5;
+            padding: 10px 20px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+        
+        button {
+            background-color: #4263eb;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.2s;
+        }
+        
+        button:hover {
+            background-color: #364fc7;
+        }
+        
+        .legend {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            font-size: 0.85rem;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 3px;
+            margin-right: 5px;
+        }
+        
+        .one-to-many {
+            background-color: #4263eb;
+        }
+        
+        .many-to-many {
+            background-color: #40c057;
+        }
+        
+        .content {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        #canvas-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: auto;
+            background-color: #ffffff;
+            background-image: 
+                linear-gradient(rgba(200, 200, 200, 0.2) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(200, 200, 200, 0.2) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        
+        #er-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            transform-origin: 0 0;
+        }
+        
+        .entity {
+            position: absolute;
+            width: 220px;
+            background-color: #ffffff;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            user-select: none;
+            transition: box-shadow 0.2s;
+            overflow: hidden;
+            cursor: move;
+        }
+        
+        .entity:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .entity-header {
+            padding: 10px;
+            color: #fff;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .entity-body {
+            max-height: 260px;
+            overflow-y: auto;
+            border-top: 1px solid rgba(0,0,0,0.1);
+        }
+        
+        .entity-field {
+            padding: 6px 10px;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            font-size: 0.85rem;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .entity-field:last-child {
+            border-bottom: none;
+        }
+        
+        .field-name {
+            font-weight: 500;
+        }
+        
+        .field-type {
+            color: #666;
+            font-size: 0.8rem;
+        }
+        
+        .primary-key {
+            color: #e03131;
+            font-weight: bold;
+        }
+        
+        .foreign-key {
+            color: #1971c2;
+        }
+        
+        .tooltip {
+            position: absolute;
+            background-color: white;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 8px 12px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            z-index: 1000;
+            font-size: 0.85rem;
+            max-width: 300px;
+            display: none;
+        }
+        
+        #minimap {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 200px;
+            height: 150px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            z-index: 100;
+            overflow: hidden;
+        }
+        
+        #minimap-view {
+            position: absolute;
+            border: 2px solid rgba(66, 99, 235, 0.5);
+            background-color: rgba(66, 99, 235, 0.1);
+            cursor: move;
+        }
+        
+        .relationship-line {
+            pointer-events: none;
+            position: absolute;
+            z-index: -1;
+        }
+        
+        .relationship-path {
+            fill: none;
+            stroke-width: 2px;
+        }
+        
+        .relationship-label {
+            font-size: 11px;
+            fill: #333;
+            font-weight: bold;
+            pointer-events: none;
+        }
+        
+        .relationship-label-bg {
+            fill: white;
+            stroke: none;
+        }
+        
+        /* 加载动画 */
+        .loading {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(255,255,255,0.8);
+            z-index: 9999;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(66, 99, 235, 0.2);
+            border-radius: 50%;
+            border-top-color: #4263eb;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>智能穿搭助手数据库ER图（优化版）</h1>
+        </div>
+        
+        <div class="toolbar">
+            <div class="controls">
+                <button id="zoom-in">放大</button>
+                <button id="zoom-out">缩小</button>
+                <button id="reset-view">重置视图</button>
+                <button id="auto-layout">自动布局</button>
+            </div>
+            
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color one-to-many"></div>
+                    <span>一对多关系</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color many-to-many"></div>
+                    <span>多对多关系</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="content">
+            <div id="canvas-container">
+                <div id="er-canvas"></div>
+            </div>
+            <div id="minimap"></div>
+            <div id="tooltip" class="tooltip"></div>
+            <div class="loading">
+                <div class="spinner"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 调试信息
+        console.log('初始化开始');
+        
+        // 全局错误处理
+        window.onerror = function(message, source, lineno, colno, error) {
+            console.error('错误:', message, '位置:', lineno);
+            document.querySelector('.loading').innerHTML = 
+                '<div style="text-align:center;color:red;padding:20px;">' + 
+                '<h3>加载出错</h3><div>' + message + '</div>' +
+                '<div>位置: 第' + lineno + '行</div>' +
+                '<button onclick="location.reload()">重新加载</button></div>';
+            return true;
+        };
+        
+        // 实体和关系数据
+        const entities = [{"id": "ClothesType", "name": "ClothesType", "color": "#9A60B4", "fields": []}, {"id": "Clothes", "name": "Clothes", "color": "#91CC75", "fields": [{"name": "id", "type": "Integer", "primary_key": true, "foreign_key": false, "foreign_key_ref": null}, {"name": "user_id", "type": "Integer", "primary_key": false, "foreign_key": true, "foreign_key_ref": "users.id"}, {"name": "name", "type": "String(100)", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "description", "type": "Text", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "category", "type": "String(50)", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "sub_category", "type": "String(50)", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "color", "type": "String(50)", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "pattern", "type": "String(50)", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "material", "type": "String(50)", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "season", "type": "String(50)", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "occasion", "type": "String(50)", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "brand", "type": "String(100)", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "ai_features", "type": "MutableList.as_mutable(ARRAY(Float))", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "ai_tags", "type": "ARRAY(String)", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "ai_category_confidence", "type": "Float", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "is_ai_categorized", "type": "Boolean", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "is_active", "type": "Boolean", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "is_favorite", "type": "Boolean", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "wear_count", "type": "Integer", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "created_at", "type": "DateTime", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "updated_at", "type": "DateTime", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}]}, {"id": "ClothesImage", "name": "ClothesImage", "color": "#5470C6", "fields": [{"name": "id", "type": "Integer", "primary_key": true, "foreign_key": false, "foreign_key_ref": null}, {"name": "clothes_id", "type": "Integer", "primary_key": false, "foreign_key": true, "foreign_key_ref": "clothes.id"}, {"name": "image_url", "type": "String(255))  # 图片URL，指向存储服务(如AWS S3、七牛云等)中的图片资源", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "is_primary", "type": "Boolean", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "created_at", "type": "DateTime", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "updated_at", "type": "DateTime", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}]}, {"id": "Outfit", "name": "Outfit", "color": "#3BA272", "fields": [{"name": "id", "type": "Integer", "primary_key": true, "foreign_key": false, "foreign_key_ref": null}, {"name": "user_id", "type": "Integer", "primary_key": false, "foreign_key": true, "foreign_key_ref": "users.id"}, {"name": "name", "type": "String(100)", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "description", "type": "Text", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "occasion", "type": "String(50)", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "style", "type": "String(50)", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "season", "type": "String(50)", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "weather", "type": "String(50)", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "ai_suggestions", "type": "MutableDict.as_mutable(JSON)", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "is_ai_generated", "type": "Boolean", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "ai_score", "type": "Float", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "is_favorite", "type": "Boolean", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "wear_count", "type": "Integer", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "last_worn_date", "type": "DateTime", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "created_at", "type": "DateTime", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "updated_at", "type": "DateTime", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}]}, {"id": "OutfitItem", "name": "OutfitItem", "color": "#FC8452", "fields": [{"name": "id", "type": "Integer", "primary_key": true, "foreign_key": false, "foreign_key_ref": null}, {"name": "outfit_id", "type": "Integer", "primary_key": false, "foreign_key": true, "foreign_key_ref": "outfits.id"}, {"name": "clothes_id", "type": "Integer", "primary_key": false, "foreign_key": true, "foreign_key_ref": "clothes.id"}, {"name": "position", "type": "Integer", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "layer", "type": "Integer", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "notes", "type": "Text", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "styling_tips", "type": "Text", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "created_at", "type": "DateTime", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "updated_at", "type": "DateTime", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}]}, {"id": "OutfitClothes", "name": "OutfitClothes", "color": "#9A60B4", "fields": [{"name": "id", "type": "Integer", "primary_key": true, "foreign_key": false, "foreign_key_ref": null}, {"name": "outfit_id", "type": "Integer", "primary_key": false, "foreign_key": true, "foreign_key_ref": "outfits.id\\", ondelete=\\"CASCADE"}, {"name": "clothes_id", "type": "Integer", "primary_key": false, "foreign_key": true, "foreign_key_ref": "clothes.id\\", ondelete=\\"CASCADE"}, {"name": "position", "type": "String(50)", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "order", "type": "Integer", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "created_at", "type": "DateTime", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "updated_at", "type": "DateTime", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}]}, {"id": "Tag", "name": "Tag", "color": "#EE6666", "fields": [{"name": "id", "type": "Integer", "primary_key": true, "foreign_key": false, "foreign_key_ref": null}, {"name": "name", "type": "String(50)", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "category", "type": "String(50)", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "is_system", "type": "Boolean", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "description", "type": "Text", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "display_order", "type": "Integer", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "created_at", "type": "DateTime", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "updated_at", "type": "DateTime", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}]}, {"id": "ClothesTag", "name": "ClothesTag", "color": "#73C0DE", "fields": [{"name": "id", "type": "Integer", "primary_key": true, "foreign_key": false, "foreign_key_ref": null}, {"name": "clothes_id", "type": "Integer", "primary_key": false, "foreign_key": true, "foreign_key_ref": "clothes.id"}, {"name": "tag_id", "type": "Integer", "primary_key": false, "foreign_key": true, "foreign_key_ref": "tags.id"}, {"name": "is_ai_generated", "type": "Boolean", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "confidence", "type": "Float", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "created_at", "type": "DateTime", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "updated_at", "type": "DateTime", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}]}, {"id": "User", "name": "User", "color": "#FAC858", "fields": [{"name": "id", "type": "Integer", "primary_key": true, "foreign_key": false, "foreign_key_ref": null}, {"name": "openid", "type": "String(100)", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "nickname", "type": "String(50)", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "avatar_url", "type": "String(255)", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "gender", "type": "Integer", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "phone", "type": "String(20)", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "is_active", "type": "Boolean", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "is_admin", "type": "Boolean", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "style_preference", "type": "MutableDict.as_mutable(JSON)", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "color_preference", "type": "MutableDict.as_mutable(JSON)", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "season_preference", "type": "MutableDict.as_mutable(JSON)", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "last_login_at", "type": "DateTime", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "login_count", "type": "Integer", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "created_at", "type": "DateTime", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "updated_at", "type": "DateTime", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}]}];
+        const relationships = [{"id": "Clothes_user_User", "source": "Clothes", "target": "User", "sourceField": "user", "targetField": "clothes", "label": "1:N", "color": "#5470c6", "description": "关系: Clothes.user -> User (一对多)"}, {"id": "Clothes_images_ClothesImage", "source": "Clothes", "target": "ClothesImage", "sourceField": "images", "targetField": "clothes", "label": "1:N", "color": "#5470c6", "description": "关系: Clothes.images -> ClothesImage (一对多)"}, {"id": "Clothes_clothes_tags_ClothesTag", "source": "Clothes", "target": "ClothesTag", "sourceField": "clothes_tags", "targetField": "clothes", "label": "1:N", "color": "#5470c6", "description": "关系: Clothes.clothes_tags -> ClothesTag (一对多)"}, {"id": "Clothes_outfit_items_OutfitItem", "source": "Clothes", "target": "OutfitItem", "sourceField": "outfit_items", "targetField": "clothes", "label": "1:N", "color": "#5470c6", "description": "关系: Clothes.outfit_items -> OutfitItem (一对多)"}, {"id": "ClothesImage_clothes_id_Clothes", "source": "ClothesImage", "target": "Clothes", "sourceField": "clothes_id", "targetField": "id", "label": "N:1", "color": "#5470c6", "description": "外键关系: ClothesImage.clothes_id -> Clothes.id"}, {"id": "ClothesImage_clothes_Clothes", "source": "ClothesImage", "target": "Clothes", "sourceField": "clothes", "targetField": "images", "label": "1:N", "color": "#5470c6", "description": "关系: ClothesImage.clothes -> Clothes (一对多)"}, {"id": "Outfit_user_User", "source": "Outfit", "target": "User", "sourceField": "user", "targetField": "outfits", "label": "1:N", "color": "#5470c6", "description": "关系: Outfit.user -> User (一对多)"}, {"id": "Outfit_outfit_items_OutfitItem", "source": "Outfit", "target": "OutfitItem", "sourceField": "outfit_items", "targetField": "outfit", "label": "1:N", "color": "#5470c6", "description": "关系: Outfit.outfit_items -> OutfitItem (一对多)"}, {"id": "OutfitItem_clothes_id_Clothes", "source": "OutfitItem", "target": "Clothes", "sourceField": "clothes_id", "targetField": "id", "label": "N:1", "color": "#5470c6", "description": "外键关系: OutfitItem.clothes_id -> Clothes.id"}, {"id": "OutfitItem_outfit_Outfit", "source": "OutfitItem", "target": "Outfit", "sourceField": "outfit", "targetField": "outfit_items", "label": "1:N", "color": "#5470c6", "description": "关系: OutfitItem.outfit -> Outfit (一对多)"}, {"id": "OutfitItem_clothes_Clothes", "source": "OutfitItem", "target": "Clothes", "sourceField": "clothes", "targetField": "outfit_items", "label": "1:N", "color": "#5470c6", "description": "关系: OutfitItem.clothes -> Clothes (一对多)"}, {"id": "Outfit_outfit_clothes_OutfitClothes", "source": "Outfit", "target": "OutfitClothes", "sourceField": "outfit_clothes", "targetField": "outfit", "label": "1:N", "color": "#5470c6", "description": "关系: Outfit.outfit_clothes -> OutfitClothes (一对多)"}, {"id": "OutfitClothes_clothes_id_Clothes", "source": "OutfitClothes", "target": "Clothes", "sourceField": "clothes_id", "targetField": "id\\", ondelete=\\"CASCADE", "label": "N:1", "color": "#5470c6", "description": "外键关系: OutfitClothes.clothes_id -> Clothes.id\\", ondelete=\\"CASCADE"}, {"id": "OutfitClothes_outfit_Outfit", "source": "OutfitClothes", "target": "Outfit", "sourceField": "outfit", "targetField": "outfit_clothes", "label": "1:N", "color": "#5470c6", "description": "关系: OutfitClothes.outfit -> Outfit (一对多)"}, {"id": "OutfitClothes_clothes_Clothes", "source": "OutfitClothes", "target": "Clothes", "sourceField": "clothes", "targetField": "outfit_clothes", "label": "1:N", "color": "#5470c6", "description": "关系: OutfitClothes.clothes -> Clothes (一对多)"}, {"id": "Tag_clothes_tags_ClothesTag", "source": "Tag", "target": "ClothesTag", "sourceField": "clothes_tags", "targetField": "tag", "label": "1:N", "color": "#5470c6", "description": "关系: Tag.clothes_tags -> ClothesTag (一对多)"}, {"id": "ClothesTag_clothes_id_Clothes", "source": "ClothesTag", "target": "Clothes", "sourceField": "clothes_id", "targetField": "id", "label": "N:1", "color": "#5470c6", "description": "外键关系: ClothesTag.clothes_id -> Clothes.id"}, {"id": "ClothesTag_clothes_Clothes", "source": "ClothesTag", "target": "Clothes", "sourceField": "clothes", "targetField": "clothes_tags", "label": "1:N", "color": "#5470c6", "description": "关系: ClothesTag.clothes -> Clothes (一对多)"}, {"id": "ClothesTag_tag_Tag", "source": "ClothesTag", "target": "Tag", "sourceField": "tag", "targetField": "clothes_tags", "label": "1:N", "color": "#5470c6", "description": "关系: ClothesTag.tag -> Tag (一对多)"}, {"id": "User_clothes_Clothes", "source": "User", "target": "Clothes", "sourceField": "clothes", "targetField": "user", "label": "1:N", "color": "#5470c6", "description": "关系: User.clothes -> Clothes (一对多)"}, {"id": "User_outfits_Outfit", "source": "User", "target": "Outfit", "sourceField": "outfits", "targetField": "user", "label": "1:N", "color": "#5470c6", "description": "关系: User.outfits -> Outfit (一对多)"}];
+        
+        // 实体和关系数据
+        const entities = {0};
+        const relationships = {1};
+        
+        // DOM元素
+        const canvasContainer = document.getElementById('canvas-container');
+        const erCanvas = document.getElementById('er-canvas');
+        const tooltip = document.getElementById('tooltip');
+        const minimap = document.getElementById('minimap');
+        const loading = document.querySelector('.loading');
+        
+        // 视图状态
+        let scale = 1;
+        let translateX = 0;
+        let translateY = 0;
+        let draggingEntity = null;
+        let draggingEntityOffsetX = 0;
+        let draggingEntityOffsetY = 0;
+        let isDraggingCanvas = false;
+        let lastMouseX = 0;
+        let lastMouseY = 0;
+        
+        // 实体位置（将存储每个实体的位置信息）
+        const entityPositions = {{}};
+        
+        // 初始化函数
+        function initialize() {
+            // 设置画布大小
+            erCanvas.style.width = '3000px';
+            erCanvas.style.height = '2000px';
+            
+            // 创建实体
+            createEntities();
+            
+            // 创建关系线
+            createRelationships();
+            
+            // 初始化小地图
+            initializeMinimap();
+            
+            // 添加事件监听器
+            addEventListeners();
+            
+            // 自动布局（初始位置）
+            autoLayout();
+            
+            // 隐藏加载动画
+            loading.classList.add('hidden');
+        }
+        
+        // 创建实体
+        function createEntities() {
+            entities.forEach(entity => {
+                // 创建实体元素
+                const entityElement = document.createElement('div');
+                entityElement.className = 'entity';
+                entityElement.id = `entity-${entity.id}`;
+                entityElement.setAttribute('data-id', entity.id);
+                
+                // 创建实体头部
+                const entityHeader = document.createElement('div');
+                entityHeader.className = 'entity-header';
+                entityHeader.style.backgroundColor = entity.color || '#6c757d';
+                entityHeader.textContent = entity.name;
+                
+                // 创建实体内容（字段列表）
+                const entityBody = document.createElement('div');
+                entityBody.className = 'entity-body';
+                
+                // 添加字段
+                entity.fields.forEach(field => {
+                    const fieldElement = document.createElement('div');
+                    fieldElement.className = 'entity-field';
+                    
+                    const nameElement = document.createElement('div');
+                    nameElement.className = 'field-name';
+                    if (field.primary_key) {
+                        nameElement.classList.add('primary-key');
+                        nameElement.innerHTML = `${field.name} <span title="主键">🔑</span>`;
+                    } else if (field.foreign_key) {
+                        nameElement.classList.add('foreign-key');
+                        nameElement.innerHTML = `${field.name} <span title="外键">🔗</span>`;
+                    } else {
+                        nameElement.textContent = field.name;
+                    }
+                    
+                    const typeElement = document.createElement('div');
+                    typeElement.className = 'field-type';
+                    typeElement.textContent = field.type;
+                    
+                    fieldElement.appendChild(nameElement);
+                    fieldElement.appendChild(typeElement);
+                    entityBody.appendChild(fieldElement);
+                });
+                
+                // 组装实体
+                entityElement.appendChild(entityHeader);
+                entityElement.appendChild(entityBody);
+                
+                // 添加到画布
+                erCanvas.appendChild(entityElement);
+                
+                // 设置初始位置（稍后会在自动布局中调整）
+                entityPositions[entity.id] = {
+                    x: Math.random() * 1000,
+                    y: Math.random() * 1000,
+                    width: 220,  // 实体宽度
+                    height: entityElement.offsetHeight || 200  // 估计高度
+                };
+                
+                // 拖拽事件处理
+                entityElement.addEventListener('mousedown', (e) => {
+                    if (e.button === 0) {  // 左键点击
+                        draggingEntity = entity.id;
+                        const rect = entityElement.getBoundingClientRect();
+                        draggingEntityOffsetX = e.clientX - rect.left;
+                        draggingEntityOffsetY = e.clientY - rect.top;
+                        e.stopPropagation();
+                    }
+                });
+                
+                // 设置位置
+                updateEntityPosition(entity.id);
+            });
+        }
+        
+        // 更新实体位置
+        function updateEntityPosition(entityId) {
+            const position = entityPositions[entityId];
+            const entityElement = document.getElementById(`entity-${entityId}`);
+            
+            if (entityElement && position) {
+                entityElement.style.transform = `translate(${position.x}px, ${position.y}px)`;
+                
+                // 更新实体高度（如果需要）
+                if (!position.height || position.height < 50) {
+                    position.height = entityElement.offsetHeight || 200;
+                }
+            }
+        }
+        
+        // 创建关系线
+        function createRelationships() {
+            // 创建SVG容器
+            const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            svg.style.position = "absolute";
+            svg.style.top = "0";
+            svg.style.left = "0";
+            svg.style.width = "100%";
+            svg.style.height = "100%";
+            svg.style.pointerEvents = "none";
+            svg.style.zIndex = "-1";
+            erCanvas.appendChild(svg);
+            
+            // 添加箭头标记
+            const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+            svg.appendChild(defs);
+            
+            // 添加一对多箭头标记
+            const markerOneToMany = document.createElementNS("http://www.w3.org/2000/svg", "marker");
+            markerOneToMany.setAttribute("id", "arrow-one-to-many");
+            markerOneToMany.setAttribute("viewBox", "0 0 10 10");
+            markerOneToMany.setAttribute("refX", "5");
+            markerOneToMany.setAttribute("refY", "5");
+            markerOneToMany.setAttribute("markerWidth", "6");
+            markerOneToMany.setAttribute("markerHeight", "6");
+            markerOneToMany.setAttribute("orient", "auto");
+            
+            const pathOneToMany = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            pathOneToMany.setAttribute("d", "M 0 0 L 10 5 L 0 10 z");
+            pathOneToMany.setAttribute("fill", "#4263eb");
+            markerOneToMany.appendChild(pathOneToMany);
+            defs.appendChild(markerOneToMany);
+            
+            // 添加多对多箭头标记
+            const markerManyToMany = document.createElementNS("http://www.w3.org/2000/svg", "marker");
+            markerManyToMany.setAttribute("id", "arrow-many-to-many");
+            markerManyToMany.setAttribute("viewBox", "0 0 10 10");
+            markerManyToMany.setAttribute("refX", "5");
+            markerManyToMany.setAttribute("refY", "5");
+            markerManyToMany.setAttribute("markerWidth", "6");
+            markerManyToMany.setAttribute("markerHeight", "6");
+            markerManyToMany.setAttribute("orient", "auto");
+            
+            const pathManyToMany = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            pathManyToMany.setAttribute("d", "M 0 0 L 10 5 L 0 10 z");
+            pathManyToMany.setAttribute("fill", "#40c057");
+            markerManyToMany.appendChild(pathManyToMany);
+            defs.appendChild(markerManyToMany);
+            
+            // 为每个关系创建连接线
+            relationships.forEach(rel => {
+                const sourceId = rel.source;
+                const targetId = rel.target;
+                
+                // 确保源实体和目标实体存在
+                if (entityPositions[sourceId] && entityPositions[targetId]) {
+                    // 创建路径组
+                    const relationshipGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                    relationshipGroup.setAttribute("class", "relationship");
+                    relationshipGroup.setAttribute("data-source", sourceId);
+                    relationshipGroup.setAttribute("data-target", targetId);
+                    
+                    // 创建路径
+                    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                    path.setAttribute("class", "relationship-path");
+                    path.setAttribute("stroke", rel.color);
+                    path.setAttribute("marker-end", rel.label.includes("N") ? "url(#arrow-many-to-many)" : "url(#arrow-one-to-many)");
+                    
+                    // 为路径添加工具提示
+                    path.addEventListener("mouseover", (e) => {
+                        tooltip.textContent = rel.description;
+                        tooltip.style.display = "block";
+                        tooltip.style.left = e.pageX + 10 + "px";
+                        tooltip.style.top = e.pageY + 10 + "px";
+                    });
+                    
+                    path.addEventListener("mouseout", () => {
+                        tooltip.style.display = "none";
+                    });
+                    
+                    // 创建关系标签背景
+                    const labelBg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                    labelBg.setAttribute("class", "relationship-label-bg");
+                    labelBg.setAttribute("rx", "3");
+                    labelBg.setAttribute("ry", "3");
+                    
+                    // 创建关系标签
+                    const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                    label.setAttribute("class", "relationship-label");
+                    label.textContent = rel.label;
+                    
+                    // 添加到组中
+                    relationshipGroup.appendChild(path);
+                    relationshipGroup.appendChild(labelBg);
+                    relationshipGroup.appendChild(label);
+                    
+                    // 添加到SVG
+                    svg.appendChild(relationshipGroup);
+                }
+            });
+            
+            // 更新连接线位置
+            updateRelationshipLines();
+        }
+        
+        // 更新关系线位置
+        function updateRelationshipLines() {
+            const relationshipElements = document.querySelectorAll(".relationship");
+            
+            relationshipElements.forEach(rel => {
+                const sourceId = rel.getAttribute("data-source");
+                const targetId = rel.getAttribute("data-target");
+                
+                const sourcePos = entityPositions[sourceId];
+                const targetPos = entityPositions[targetId];
+                
+                if (sourcePos && targetPos) {
+                    // 计算两个实体的中心点
+                    const sourceX = sourcePos.x + sourcePos.width / 2;
+                    const sourceY = sourcePos.y + sourcePos.height / 2;
+                    const targetX = targetPos.x + targetPos.width / 2;
+                    const targetY = targetPos.y + targetPos.height / 2;
+                    
+                    // 计算方向向量
+                    const dx = targetX - sourceX;
+                    const dy = targetY - sourceY;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    // 确定连接点（从实体边缘开始）
+                    const sourceOffsetX = (dx / distance) * (sourcePos.width / 2);
+                    const sourceOffsetY = (dy / distance) * (sourcePos.height / 2);
+                    const targetOffsetX = (dx / distance) * (targetPos.width / 2);
+                    const targetOffsetY = (dy / distance) * (targetPos.height / 2);
+                    
+                    const startX = sourceX + sourceOffsetX;
+                    const startY = sourceY + sourceOffsetY;
+                    const endX = targetX - targetOffsetX;
+                    const endY = targetY - targetOffsetY;
+                    
+                    // 使用贝塞尔曲线创建连接线
+                    const midX = (startX + endX) / 2;
+                    const midY = (startY + endY) / 2;
+                    
+                    // 计算曲线控制点的偏移量
+                    const controlPointOffset = Math.min(100, distance / 3);
+                    
+                    // 垂直于连线的向量
+                    const perpX = -dy / distance;
+                    const perpY = dx / distance;
+                    
+                    // 控制点坐标
+                    const ctrlX = midX + perpX * controlPointOffset;
+                    const ctrlY = midY + perpY * controlPointOffset;
+                    
+                    // 设置路径
+                    const path = rel.querySelector(".relationship-path");
+                    path.setAttribute("d", `M ${startX} ${startY} Q ${ctrlX} ${ctrlY}, ${endX} ${endY}`);
+                    
+                    // 更新标签位置
+                    const label = rel.querySelector(".relationship-label");
+                    label.setAttribute("x", ctrlX);
+                    label.setAttribute("y", ctrlY - 10);
+                    label.setAttribute("text-anchor", "middle");
+                    
+                    // 获取标签的边界框
+                    const labelBox = label.getBBox();
+                    
+                    // 更新标签背景
+                    const labelBg = rel.querySelector(".relationship-label-bg");
+                    labelBg.setAttribute("x", labelBox.x - 4);
+                    labelBg.setAttribute("y", labelBox.y - 2);
+                    labelBg.setAttribute("width", labelBox.width + 8);
+                    labelBg.setAttribute("height", labelBox.height + 4);
+                }
+            });
+        }
+        
+        // 自动布局
+        function autoLayout() {
+            // 简单的分层布局
+            // 按每行4个实体排列
+            const itemsPerRow = 4;
+            const horizontalSpacing = 300;
+            const verticalSpacing = 250;
+            
+            entities.forEach((entity, index) => {
+                const row = Math.floor(index / itemsPerRow);
+                const col = index % itemsPerRow;
+                
+                entityPositions[entity.id] = {
+                    x: col * horizontalSpacing + 50,
+                    y: row * verticalSpacing + 50,
+                    width: 220,
+                    height: document.getElementById(`entity-${entity.id}`).offsetHeight || 200
+                };
+                
+                updateEntityPosition(entity.id);
+            });
+            
+            // 更新关系线
+            updateRelationshipLines();
+            
+            // 更新小地图
+            updateMinimap();
+            
+            // 确保视图能显示所有实体
+            fitCanvasToEntities();
+        }
+        
+        // 调整视图以显示所有实体
+        function fitCanvasToEntities() {
+            // 找出所有实体的边界
+            let minX = Infinity;
+            let minY = Infinity;
+            let maxX = -Infinity;
+            let maxY = -Infinity;
+            
+            Object.values(entityPositions).forEach(pos => {
+                minX = Math.min(minX, pos.x);
+                minY = Math.min(minY, pos.y);
+                maxX = Math.max(maxX, pos.x + pos.width);
+                maxY = Math.max(maxY, pos.y + pos.height);
+            });
+            
+            // 添加边距
+            minX -= 50;
+            minY -= 50;
+            maxX += 50;
+            maxY += 50;
+            
+            // 计算画布尺寸
+            const canvasWidth = maxX - minX;
+            const canvasHeight = maxY - minY;
+            
+            // 计算缩放比例
+            const containerRect = canvasContainer.getBoundingClientRect();
+            const widthScale = containerRect.width / canvasWidth;
+            const heightScale = containerRect.height / canvasHeight;
+            scale = Math.min(widthScale, heightScale, 1);  // 最大缩放为1
+            
+            // 设置平移位置
+            translateX = minX;
+            translateY = minY;
+            
+            // 更新变换
+            updateCanvasTransform();
+            updateMinimap();
+        }
+        
+        // 初始化小地图
+        function initializeMinimap() {
+            const minimapView = document.createElement('div');
+            minimapView.id = 'minimap-view';
+            minimap.appendChild(minimapView);
+            
+            updateMinimap();
+            
+            // 小地图拖拽事件
+            let isDraggingMinimap = false;
+            let minimapStartX, minimapStartY;
+            
+            minimapView.addEventListener('mousedown', (e) => {
+                isDraggingMinimap = true;
+                minimapStartX = e.clientX;
+                minimapStartY = e.clientY;
+                e.stopPropagation();
+            });
+            
+            document.addEventListener('mousemove', (e) => {
+                if (isDraggingMinimap) {
+                    const dx = e.clientX - minimapStartX;
+                    const dy = e.clientY - minimapStartY;
+                    
+                    // 更新画布位置
+                    const minimapRect = minimap.getBoundingClientRect();
+                    const minimapScaleX = minimapRect.width / erCanvas.offsetWidth;
+                    const minimapScaleY = minimapRect.height / erCanvas.offsetHeight;
+                    
+                    translateX += dx / scale / minimapScaleX;
+                    translateY += dy / scale / minimapScaleY;
+                    
+                    updateCanvasTransform();
+                    updateMinimap();
+                    
+                    minimapStartX = e.clientX;
+                    minimapStartY = e.clientY;
+                }
+            });
+            
+            document.addEventListener('mouseup', () => {
+                isDraggingMinimap = false;
+            });
+        }
+        
+        // 更新小地图
+        function updateMinimap() {
+            // 获取画布和容器尺寸
+            const canvasRect = {
+                width: erCanvas.offsetWidth,
+                height: erCanvas.offsetHeight
+            };
+            
+            const containerRect = canvasContainer.getBoundingClientRect();
+            
+            // 计算小地图的尺寸和缩放
+            const minimapRect = minimap.getBoundingClientRect();
+            const minimapScaleX = minimapRect.width / canvasRect.width;
+            const minimapScaleY = minimapRect.height / canvasRect.height;
+            const minimapScale = Math.min(minimapScaleX, minimapScaleY);
+            
+            // 计算视图在小地图中的位置和尺寸
+            const viewWidth = containerRect.width / scale;
+            const viewHeight = containerRect.height / scale;
+            
+            const viewLeft = translateX;
+            const viewTop = translateY;
+            
+            // 更新小地图视图的位置和尺寸
+            const minimapView = document.getElementById('minimap-view');
+            minimapView.style.left = (viewLeft * minimapScale) + 'px';
+            minimapView.style.top = (viewTop * minimapScale) + 'px';
+            minimapView.style.width = (viewWidth * minimapScale) + 'px';
+            minimapView.style.height = (viewHeight * minimapScale) + 'px';
+        }
+        
+        // 添加事件监听器
+        function addEventListeners() {
+            // 全局鼠标移动事件
+            document.addEventListener('mousemove', (e) => {
+                if (draggingEntity) {
+                    // 计算新位置（考虑缩放）
+                    const containerRect = canvasContainer.getBoundingClientRect();
+                    const x = (e.clientX - containerRect.left - draggingEntityOffsetX) / scale + translateX;
+                    const y = (e.clientY - containerRect.top - draggingEntityOffsetY) / scale + translateY;
+                    
+                    // 更新位置
+                    entityPositions[draggingEntity].x = x;
+                    entityPositions[draggingEntity].y = y;
+                    
+                    // 更新DOM
+                    updateEntityPosition(draggingEntity);
+                    
+                    // 更新关系线
+                    updateRelationshipLines();
+                    
+                    // 更新小地图
+                    updateMinimap();
+                } else if (isDraggingCanvas) {
+                    // 平移整个画布
+                    const dx = e.clientX - lastMouseX;
+                    const dy = e.clientY - lastMouseY;
+                    
+                    translateX -= dx / scale;
+                    translateY -= dy / scale;
+                    
+                    updateCanvasTransform();
+                    updateMinimap();
+                    
+                    lastMouseX = e.clientX;
+                    lastMouseY = e.clientY;
+                }
+            });
+            
+            // 鼠标松开事件
+            document.addEventListener('mouseup', () => {
+                draggingEntity = null;
+                isDraggingCanvas = false;
+            });
+            
+            // 画布容器鼠标按下事件（开始平移）
+            canvasContainer.addEventListener('mousedown', (e) => {
+                if (e.button === 0 && !draggingEntity) {  // 左键点击且没有拖拽实体
+                    isDraggingCanvas = true;
+                    lastMouseX = e.clientX;
+                    lastMouseY = e.clientY;
+                    canvasContainer.style.cursor = 'grabbing';
+                }
+            });
+            
+            canvasContainer.addEventListener('mouseup', () => {
+                canvasContainer.style.cursor = 'default';
+            });
+            
+            // 缩放按钮
+            document.getElementById('zoom-in').addEventListener('click', () => {
+                scale *= 1.2;
+                updateCanvasTransform();
+                updateMinimap();
+            });
+            
+            document.getElementById('zoom-out').addEventListener('click', () => {
+                scale /= 1.2;
+                updateCanvasTransform();
+                updateMinimap();
+            });
+            
+            document.getElementById('reset-view').addEventListener('click', resetView);
+            document.getElementById('auto-layout').addEventListener('click', autoLayout);
+            
+            // 鼠标滚轮缩放
+            canvasContainer.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                
+                // 获取鼠标位置
+                const containerRect = canvasContainer.getBoundingClientRect();
+                const mouseX = e.clientX - containerRect.left;
+                const mouseY = e.clientY - containerRect.top;
+                
+                // 计算鼠标在画布中的位置
+                const canvasX = mouseX / scale + translateX;
+                const canvasY = mouseY / scale + translateY;
+                
+                // 调整缩放
+                const scaleFactor = e.deltaY > 0 ? 0.9 : 1.1;
+                scale *= scaleFactor;
+                
+                // 调整平移以保持鼠标位置不变
+                translateX = canvasX - mouseX / scale;
+                translateY = canvasY - mouseY / scale;
+                
+                updateCanvasTransform();
+                updateMinimap();
+            });
+        }
+        
+        // 更新画布变换
+        function updateCanvasTransform() {
+            erCanvas.style.transform = `matrix(${scale}, 0, 0, ${scale}, ${-translateX * scale}px, ${-translateY * scale}px)`;
+        }
+        
+        // 重置视图
+        function resetView() {
+            scale = 1;
+            translateX = 0;
+            translateY = 0;
+            updateCanvasTransform();
+            updateMinimap();
+        }
+        
+        // 初始化应用
+        initialize();
+    </script>
+</body>
+</html>

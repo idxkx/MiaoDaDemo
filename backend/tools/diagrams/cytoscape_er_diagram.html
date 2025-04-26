@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>数据库 ER 图 (Cytoscape.js)</title>
+    <script src="https://unpkg.com/cytoscape/dist/cytoscape.min.js"></script>
+    <script src="https://unpkg.com/dagre@0.8.5/dist/dagre.min.js"></script>
+    <script src="https://unpkg.com/cytoscape-dagre@2.4.0/cytoscape-dagre.js"></script>
+    <style>
+        body { 
+            margin: 0; 
+            font-family: sans-serif; 
+            display: flex; 
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+        #header {
+            background-color: #f0f0f0;
+            padding: 10px;
+            border-bottom: 1px solid #ccc;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #title {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        #controls {
+            display: flex;
+            gap: 10px;
+        }
+        button {
+            padding: 5px 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        #cy { 
+            flex: 1; 
+            height: 100%; 
+            display: block; 
+        }
+        #info-panel {
+            width: 300px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-left: 1px solid #ccc;
+            overflow-y: auto;
+            display: none;
+        }
+        .entity-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        .field-list {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .field-item {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        .field-item:last-child {
+            border-bottom: none;
+        }
+        .field-name {
+            font-weight: bold;
+        }
+        .field-type {
+            color: #666;
+            font-size: 12px;
+        }
+        .pk-badge {
+            background-color: #ff9800;
+            color: white;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-size: 10px;
+            margin-left: 5px;
+        }
+        .fk-badge {
+            background-color: #2196F3;
+            color: white;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-size: 10px;
+            margin-left: 5px;
+        }
+        .tooltip {
+            position: absolute;
+            background-color: rgba(0,0,0,0.8);
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            pointer-events: none;
+            z-index: 999;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="header">
+        <div id="title">数据库 ER 关系图</div>
+        <div id="controls">
+            <button id="fit-btn">适应屏幕</button>
+            <button id="layout-btn">重新布局</button>
+            <button id="toggle-fields-btn">显示/隐藏字段</button>
+            <select id="layout-select">
+                <option value="dagre">层次布局</option>
+                <option value="cose">力导向布局</option>
+                <option value="circle">圆形布局</option>
+                <option value="concentric">同心圆布局</option>
+                <option value="grid">网格布局</option>
+            </select>
+        </div>
+    </div>
+    <div id="main-container">
+        <div id="cy"></div>
+        <div id="info-panel"></div>
+    </div>
+    <div class="tooltip" id="tooltip"></div>
+    <script src="cytoscape_er_data.js"></script>
+    <script>
+        // 增强的 Cytoscape 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                // 注册 dagre 布局插件
+                cytoscape.use(cytoscapeDagre);
+
+                // 初始化 Cytoscape
+                var cy = cytoscape({
+                    container: document.getElementById('cy'),
+                    elements: elementsData,
+                    style: [
+                        {
+                            selector: 'node',
+                            style: {
+                                'label': 'data(name)',
+                                'background-color': 'data(color)',
+                                'color': '#fff',
+                                'text-valign': 'center',
+                                'text-halign': 'center',
+                                'font-size': '14px',
+                                'text-outline-width': 2,
+                                'text-outline-color': 'data(color)',
+                                'shape': 'roundrectangle',
+                                'width': '120px',
+                                'height': '40px',
+                                'text-wrap': 'wrap',
+                                'text-max-width': '100px'
+                            }
+                        },
+                        {
+                            selector: 'edge',
+                            style: {
+                                'width': 2,
+                                'line-color': '#5470C6',
+                                'target-arrow-shape': 'triangle',
+                                'target-arrow-color': '#5470C6',
+                                'curve-style': 'bezier',
+                                'label': 'data(label)',
+                                'font-size': '10px',
+                                'color': '#333',
+                                'text-background-color': '#fff',
+                                'text-background-opacity': 0.8,
+                                'text-background-padding': '2px'
+                            }
+                        },
+                        {
+                            selector: 'node.with-fields',
+                            style: {
+                                'shape': 'roundrectangle',
+                                'width': 'label',
+                                'height': 'label',
+                                'padding': '15px',
+                                'text-valign': 'top',
+                                'text-halign': 'center',
+                                'text-margin-y': -5,
+                                'background-color': 'data(color)',
+                            }
+                        },
+                        {
+                            selector: 'node:selected',
+                            style: {
+                                'border-width': 3,
+                                'border-color': '#ff0000'
+                            }
+                        },
+                        {
+                            selector: 'edge:selected',
+                            style: {
+                                'width': 4,
+                                'line-color': '#ff0000',
+                                'target-arrow-color': '#ff0000'
+                            }
+                        }
+                    ],
+                    layout: {
+                        name: 'dagre',
+                        rankDir: 'LR',
+                        padding: 50,
+                        spacingFactor: 1.5
+                    },
+                    wheelSensitivity: 0.3
+                });
+
+                // 为节点添加悬停工具提示
+                const tooltip = document.getElementById('tooltip');
+                cy.on('mouseover', 'node', function(e) {
+                    const node = e.target;
+                    const fields = node.data('fields');
+                    
+                    if(fields && fields.length > 0) {
+                        let content = `<strong>${node.data('name')}</strong><br>字段数量: ${fields.length}`;
+                        
+                        // 只显示主键和外键
+                        const pks = fields.filter(f => f.pk);
+                        const fks = fields.filter(f => f.fk);
+                        
+                        if(pks.length > 0) {
+                            content += `<br>主键: ${pks.map(f => f.name).join(', ')}`;
+                        }
+                        
+                        if(fks.length > 0) {
+                            content += `<br>外键: ${fks.map(f => f.name).join(', ')}`;
+                        }
+                        
+                        tooltip.innerHTML = content;
+                        tooltip.style.display = 'block';
+                        
+                        const renderedPosition = node.renderedPosition();
+                        const renderedWidth = node.renderedWidth();
+
+                        tooltip.style.left = (renderedPosition.x + renderedWidth/2 + 10) + 'px';
+                        tooltip.style.top = renderedPosition.y + 'px';
+                    }
+                });
+
+                cy.on('mouseout', 'node', function() {
+                    tooltip.style.display = 'none';
+                });
+
+                cy.on('mousemove', 'node', function(e) {
+                    // 如果从工具提示移动到节点，不会触发mouseout，所以我们需要手动更新位置
+                    if(tooltip.style.display === 'block') {
+                        const node = e.target;
+                        const renderedPosition = node.renderedPosition();
+                        const renderedWidth = node.renderedWidth();
+
+                        tooltip.style.left = (renderedPosition.x + renderedWidth/2 + 10) + 'px';
+                        tooltip.style.top = renderedPosition.y + 'px';
+                    }
+                });
+
+                // 点击节点显示详细信息面板
+                const infoPanel = document.getElementById('info-panel');
+                
+                cy.on('click', 'node', function(e) {
+                    const node = e.target;
+                    const fields = node.data('fields');
+                    
+                    if(fields && fields.length > 0) {
+                        let html = `<div class="entity-title" style="color:${node.data('color')}">${node.data('name')}</div>`;
+                        html += '<div class="field-list">';
+                        
+                        // 排序：主键在前，然后是外键，然后按字母顺序
+                        const sortedFields = [...fields].sort((a, b) => {
+                            if(a.pk && !b.pk) return -1;
+                            if(!a.pk && b.pk) return 1;
+                            if(a.fk && !b.fk) return -1;
+                            if(!a.fk && b.fk) return 1;
+                            return a.name.localeCompare(b.name);
+                        });
+                        
+                        sortedFields.forEach(field => {
+                            html += `<div class="field-item">
+                                <span class="field-name">${field.name}</span>
+                                ${field.pk ? '<span class="pk-badge">PK</span>' : ''}
+                                ${field.fk ? '<span class="fk-badge">FK</span>' : ''}
+                                <br>
+                                <span class="field-type">${field.type}</span>
+                                ${field.fk_ref ? `<br><small>引用: ${field.fk_ref}</small>` : ''}
+                            </div>`;
+                        });
+                        
+                        html += '</div>';
+                        infoPanel.innerHTML = html;
+                        infoPanel.style.display = 'block';
+                    }
+                });
+                
+                cy.on('click', function(e) {
+                    if(e.target === cy) {
+                        // 点击背景，隐藏信息面板
+                        infoPanel.style.display = 'none';
+                    }
+                });
+
+                // 为按钮绑定事件处理器
+                document.getElementById('fit-btn').addEventListener('click', function() {
+                    cy.fit();
+                });
+
+                document.getElementById('layout-btn').addEventListener('click', function() {
+                    const layoutName = document.getElementById('layout-select').value;
+                    runLayout(layoutName);
+                });
+
+                document.getElementById('toggle-fields-btn').addEventListener('click', function() {
+                    toggleFieldsDisplay();
+                });
+
+                document.getElementById('layout-select').addEventListener('change', function() {
+                    const layoutName = this.value;
+                    runLayout(layoutName);
+                });
+
+                // 布局函数
+                function runLayout(name) {
+                    let layoutOptions;
+                    
+                    switch(name) {
+                        case 'dagre':
+                            layoutOptions = {
+                                name: 'dagre',
+                                rankDir: 'LR',
+                                padding: 50,
+                                spacingFactor: 1.5,
+                                animate: true,
+                                animationDuration: 500
+                            };
+                            break;
+                        case 'cose':
+                            layoutOptions = {
+                                name: 'cose',
+                                padding: 50,
+                                animate: true,
+                                animationDuration: 500,
+                                nodeRepulsion: 8000,
+                                nodeOverlap: 10,
+                                idealEdgeLength: 100
+                            };
+                            break;
+                        case 'circle':
+                            layoutOptions = {
+                                name: 'circle',
+                                padding: 50,
+                                animate: true,
+                                animationDuration: 500
+                            };
+                            break;
+                        case 'concentric':
+                            layoutOptions = {
+                                name: 'concentric',
+                                padding: 50,
+                                animate: true,
+                                animationDuration: 500,
+                                minNodeSpacing: 50,
+                                concentric: function(node) {
+                                    // 根据连接数确定节点的层级
+                                    return node.degree();
+                                }
+                            };
+                            break;
+                        case 'grid':
+                        default:
+                            layoutOptions = {
+                                name: 'grid',
+                                padding: 50,
+                                animate: true,
+                                animationDuration: 500,
+                                avoidOverlap: true,
+                                spacingFactor: 1.5
+                            };
+                    }
+                    
+                    cy.layout(layoutOptions).run();
+                }
+
+                // 切换显示字段
+                let showingFields = false;
+                function toggleFieldsDisplay() {
+                    showingFields = !showingFields;
+                    
+                    if(showingFields) {
+                        // 显示字段
+                        cy.nodes().forEach(node => {
+                            const fields = node.data('fields');
+                            if(fields && fields.length > 0) {
+                                // 只显示前5个字段，防止图表过于拥挤
+                                const sortedFields = [...fields]
+                                    .sort((a, b) => {
+                                        if(a.pk && !b.pk) return -1;
+                                        if(!a.pk && b.pk) return 1;
+                                        if(a.fk && !b.fk) return -1;
+                                        if(!a.fk && b.fk) return 1;
+                                        return 0;
+                                    })
+                                    .slice(0, 5);
+                                
+                                let content = node.data('name') + '\n';
+                                sortedFields.forEach(field => {
+                                    const pkMark = field.pk ? '🔑' : '';
+                                    const fkMark = field.fk ? '🔗' : '';
+                                    content += `${pkMark}${fkMark} ${field.name}: ${field.type}\n`;
+                                });
+                                
+                                if(fields.length > 5) {
+                                    content += `...and ${fields.length - 5} more fields`;
+                                }
+                                
+                                node.style({
+                                    'label': content,
+                                    'text-wrap': 'wrap',
+                                    'text-max-width': '200px'
+                                });
+                                
+                                node.addClass('with-fields');
+                            }
+                        });
+                    } else {
+                        // 恢复默认显示
+                        cy.nodes().forEach(node => {
+                            node.style({
+                                'label': node.data('name'),
+                                'text-wrap': 'none'
+                            });
+                            
+                            node.removeClass('with-fields');
+                        });
+                    }
+                    
+                    // 重新运行布局以适应新的节点大小
+                    runLayout(document.getElementById('layout-select').value);
+                }
+
+                // 自动适应屏幕大小
+                cy.fit();
+                
+                console.log("Cytoscape initialized successfully.");
+            } catch (error) {
+                console.error("Error initializing Cytoscape:", error);
+                document.body.innerHTML = '<h1 style="color:red">Error initializing Cytoscape. Check console.</h1>';
+            }
+        });
+    </script>
+</body>
+</html>

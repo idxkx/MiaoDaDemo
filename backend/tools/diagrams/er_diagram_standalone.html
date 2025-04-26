@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能穿搭助手数据库ER图</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        .header {
+            background-color: #333;
+            color: white;
+            padding: 15px 20px;
+            text-align: center;
+        }
+        .content {
+            flex: 1;
+            display: flex;
+            position: relative;
+        }
+        #er-chart {
+            width: 100%;
+            height: 100%;
+            min-height: 800px;
+            overflow: auto;
+        }
+        .legend {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.8);
+            border-radius: 5px;
+            padding: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            z-index: 100;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .legend-color {
+            width: 20px;
+            height: 3px;
+            margin-right: 10px;
+        }
+        .one-to-many {
+            background-color: #5470c6;
+        }
+        .many-to-many {
+            background-color: #91cc75;
+        }
+        svg {
+            width: 100%;
+            height: 100%;
+        }
+        .entity {
+            fill: #f0f0f0;
+            stroke: #333;
+            stroke-width: 1;
+        }
+        .entity-name {
+            font-weight: bold;
+            text-anchor: middle;
+        }
+        .entity-field {
+            font-size: 12px;
+        }
+        .relationship-line {
+            stroke: #5470c6;
+            stroke-width: 2;
+        }
+        .tooltip {
+            position: absolute;
+            z-index: 1000;
+            display: none;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            max-width: 300px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>智能穿搭助手数据库ER图</h1>
+        </div>
+        <div class="content">
+            <div id="er-chart"></div>
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color one-to-many"></div>
+                    <span>一对多关系</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color many-to-many"></div>
+                    <span>多对多关系</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="tooltip" class="tooltip"></div>
+
+    <script>
+        (function() {
+            const container = document.getElementById('er-chart');
+            const tooltip = document.getElementById('tooltip');
+            
+            // 实体和关系数据
+            const entities = [{"name": "ClothesType", "color": "#9A60B4", "fields": []}, {"name": "Clothes", "color": "#91CC75", "fields": [{"name": "id", "type": "Integer", "primary_key": true, "foreign_key": false, "foreign_key_ref": null}, {"name": "user_id", "type": "Integer", "primary_key": false, "foreign_key": true, "foreign_key_ref": "users.id"}, {"name": "name", "type": "String(100)", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "description", "type": "Text", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "category", "type": "String(50)", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "sub_category", "type": "String(50)", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "color", "type": "String(50)", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "pattern", "type": "String(50)", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "material", "type": "String(50)", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "season", "type": "String(50)", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "occasion", "type": "String(50)", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "brand", "type": "String(100)", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "ai_features", "type": "MutableList.as_mutable(ARRAY(Float))", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "ai_tags", "type": "ARRAY(String)", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "ai_category_confidence", "type": "Float", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "is_ai_categorized", "type": "Boolean", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "is_active", "type": "Boolean", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "is_favorite", "type": "Boolean", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "wear_count", "type": "Integer", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "created_at", "type": "DateTime", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "updated_at", "type": "DateTime", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}]}, {"name": "ClothesImage", "color": "#5470C6", "fields": [{"name": "id", "type": "Integer", "primary_key": true, "foreign_key": false, "foreign_key_ref": null}, {"name": "clothes_id", "type": "Integer", "primary_key": false, "foreign_key": true, "foreign_key_ref": "clothes.id"}, {"name": "image_url", "type": "String(255))  # 图片URL，指向存储服务(如AWS S3、七牛云等)中的图片资源", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "is_primary", "type": "Boolean", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "created_at", "type": "DateTime", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "updated_at", "type": "DateTime", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}]}, {"name": "Outfit", "color": "#3BA272", "fields": [{"name": "id", "type": "Integer", "primary_key": true, "foreign_key": false, "foreign_key_ref": null}, {"name": "user_id", "type": "Integer", "primary_key": false, "foreign_key": true, "foreign_key_ref": "users.id"}, {"name": "name", "type": "String(100)", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "description", "type": "Text", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "occasion", "type": "String(50)", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "style", "type": "String(50)", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "season", "type": "String(50)", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "weather", "type": "String(50)", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "ai_suggestions", "type": "MutableDict.as_mutable(JSON)", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "is_ai_generated", "type": "Boolean", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "ai_score", "type": "Float", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "is_favorite", "type": "Boolean", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "wear_count", "type": "Integer", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "last_worn_date", "type": "DateTime", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "created_at", "type": "DateTime", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "updated_at", "type": "DateTime", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}]}, {"name": "OutfitItem", "color": "#FC8452", "fields": [{"name": "id", "type": "Integer", "primary_key": true, "foreign_key": false, "foreign_key_ref": null}, {"name": "outfit_id", "type": "Integer", "primary_key": false, "foreign_key": true, "foreign_key_ref": "outfits.id"}, {"name": "clothes_id", "type": "Integer", "primary_key": false, "foreign_key": true, "foreign_key_ref": "clothes.id"}, {"name": "position", "type": "Integer", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "layer", "type": "Integer", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "notes", "type": "Text", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "styling_tips", "type": "Text", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "created_at", "type": "DateTime", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "updated_at", "type": "DateTime", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}]}, {"name": "OutfitClothes", "color": "#9A60B4", "fields": [{"name": "id", "type": "Integer", "primary_key": true, "foreign_key": false, "foreign_key_ref": null}, {"name": "outfit_id", "type": "Integer", "primary_key": false, "foreign_key": true, "foreign_key_ref": "outfits.id\", ondelete=\"CASCADE"}, {"name": "clothes_id", "type": "Integer", "primary_key": false, "foreign_key": true, "foreign_key_ref": "clothes.id\", ondelete=\"CASCADE"}, {"name": "position", "type": "String(50)", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "order", "type": "Integer", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "created_at", "type": "DateTime", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "updated_at", "type": "DateTime", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}]}, {"name": "Tag", "color": "#EE6666", "fields": [{"name": "id", "type": "Integer", "primary_key": true, "foreign_key": false, "foreign_key_ref": null}, {"name": "name", "type": "String(50)", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "category", "type": "String(50)", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "is_system", "type": "Boolean", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "description", "type": "Text", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "display_order", "type": "Integer", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "created_at", "type": "DateTime", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "updated_at", "type": "DateTime", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}]}, {"name": "ClothesTag", "color": "#73C0DE", "fields": [{"name": "id", "type": "Integer", "primary_key": true, "foreign_key": false, "foreign_key_ref": null}, {"name": "clothes_id", "type": "Integer", "primary_key": false, "foreign_key": true, "foreign_key_ref": "clothes.id"}, {"name": "tag_id", "type": "Integer", "primary_key": false, "foreign_key": true, "foreign_key_ref": "tags.id"}, {"name": "is_ai_generated", "type": "Boolean", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "confidence", "type": "Float", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "created_at", "type": "DateTime", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "updated_at", "type": "DateTime", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}]}, {"name": "User", "color": "#FAC858", "fields": [{"name": "id", "type": "Integer", "primary_key": true, "foreign_key": false, "foreign_key_ref": null}, {"name": "openid", "type": "String(100)", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "nickname", "type": "String(50)", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "avatar_url", "type": "String(255)", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "gender", "type": "Integer", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "phone", "type": "String(20)", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "is_active", "type": "Boolean", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "is_admin", "type": "Boolean", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "style_preference", "type": "MutableDict.as_mutable(JSON)", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "color_preference", "type": "MutableDict.as_mutable(JSON)", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "season_preference", "type": "MutableDict.as_mutable(JSON)", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "last_login_at", "type": "DateTime", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "login_count", "type": "Integer", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "created_at", "type": "DateTime", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}, {"name": "updated_at", "type": "DateTime", "primary_key": false, "foreign_key": false, "foreign_key_ref": null}]}];
+            const relationships = [{"source": "Clothes", "target": "User", "label": "1:N", "color": "#5470c6", "description": "关系: Clothes.user -> User (一对多)"}, {"source": "Clothes", "target": "ClothesImage", "label": "1:N", "color": "#5470c6", "description": "关系: Clothes.images -> ClothesImage (一对多)"}, {"source": "Clothes", "target": "ClothesTag", "label": "1:N", "color": "#5470c6", "description": "关系: Clothes.clothes_tags -> ClothesTag (一对多)"}, {"source": "Clothes", "target": "OutfitItem", "label": "1:N", "color": "#5470c6", "description": "关系: Clothes.outfit_items -> OutfitItem (一对多)"}, {"source": "ClothesImage", "target": "Clothes", "label": "N:1", "color": "#5470c6", "description": "外键关系: ClothesImage.clothes_id -> clothes.id"}, {"source": "ClothesImage", "target": "Clothes", "label": "1:N", "color": "#5470c6", "description": "关系: ClothesImage.clothes -> Clothes (一对多)"}, {"source": "Outfit", "target": "User", "label": "1:N", "color": "#5470c6", "description": "关系: Outfit.user -> User (一对多)"}, {"source": "Outfit", "target": "OutfitItem", "label": "1:N", "color": "#5470c6", "description": "关系: Outfit.outfit_items -> OutfitItem (一对多)"}, {"source": "OutfitItem", "target": "Clothes", "label": "N:1", "color": "#5470c6", "description": "外键关系: OutfitItem.clothes_id -> clothes.id"}, {"source": "OutfitItem", "target": "Outfit", "label": "1:N", "color": "#5470c6", "description": "关系: OutfitItem.outfit -> Outfit (一对多)"}, {"source": "OutfitItem", "target": "Clothes", "label": "1:N", "color": "#5470c6", "description": "关系: OutfitItem.clothes -> Clothes (一对多)"}, {"source": "Outfit", "target": "User", "label": "1:N", "color": "#5470c6", "description": "关系: Outfit.user -> User (一对多)"}, {"source": "Outfit", "target": "OutfitClothes", "label": "1:N", "color": "#5470c6", "description": "关系: Outfit.outfit_clothes -> OutfitClothes (一对多)"}, {"source": "OutfitClothes", "target": "Clothes", "label": "N:1", "color": "#5470c6", "description": "外键关系: OutfitClothes.clothes_id -> clothes.id\", ondelete=\"CASCADE"}, {"source": "OutfitClothes", "target": "Outfit", "label": "1:N", "color": "#5470c6", "description": "关系: OutfitClothes.outfit -> Outfit (一对多)"}, {"source": "OutfitClothes", "target": "Clothes", "label": "1:N", "color": "#5470c6", "description": "关系: OutfitClothes.clothes -> Clothes (一对多)"}, {"source": "Tag", "target": "ClothesTag", "label": "1:N", "color": "#5470c6", "description": "关系: Tag.clothes_tags -> ClothesTag (一对多)"}, {"source": "ClothesTag", "target": "Clothes", "label": "N:1", "color": "#5470c6", "description": "外键关系: ClothesTag.clothes_id -> clothes.id"}, {"source": "ClothesTag", "target": "Clothes", "label": "1:N", "color": "#5470c6", "description": "关系: ClothesTag.clothes -> Clothes (一对多)"}, {"source": "ClothesTag", "target": "Tag", "label": "1:N", "color": "#5470c6", "description": "关系: ClothesTag.tag -> Tag (一对多)"}, {"source": "User", "target": "Clothes", "label": "1:N", "color": "#5470c6", "description": "关系: User.clothes -> Clothes (一对多)"}, {"source": "User", "target": "Outfit", "label": "1:N", "color": "#5470c6", "description": "关系: User.outfits -> Outfit (一对多)"}, {"source": "User", "target": "Clothes", "label": "1:N", "color": "#5470c6", "description": "关系: User.clothes -> Clothes (一对多)"}, {"source": "User", "target": "Outfit", "label": "1:N", "color": "#5470c6", "description": "关系: User.outfits -> Outfit (一对多)"}];
+            
+            // 创建SVG元素
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('viewBox', '0 0 1600 1000');
+            container.appendChild(svg);
+            
+            // 添加箭头标记
+            const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+            svg.appendChild(defs);
+            
+            const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+            marker.setAttribute('id', 'arrow');
+            marker.setAttribute('viewBox', '0 0 10 10');
+            marker.setAttribute('refX', '5');
+            marker.setAttribute('refY', '5');
+            marker.setAttribute('markerWidth', '6');
+            marker.setAttribute('markerHeight', '6');
+            marker.setAttribute('orient', 'auto-start-reverse');
+            
+            const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            arrow.setAttribute('d', 'M 0 0 L 10 5 L 0 10 z');
+            arrow.setAttribute('fill', '#5470c6');
+            
+            marker.appendChild(arrow);
+            defs.appendChild(marker);
+            
+            // 布局参数
+            const entityWidth = 180;
+            const entityHeight = 140;
+            const columns = 4;
+            const marginX = 100;
+            const marginY = 180;
+            const startX = 100;
+            const startY = 80;
+            
+            // 创建实体位置映射
+            const entityPositions = {};
+            
+            entities.forEach((entity, index) => {
+                const col = index % columns;
+                const row = Math.floor(index / columns);
+                
+                const x = startX + col * (entityWidth + marginX);
+                const y = startY + row * (entityHeight + marginY);
+                
+                entityPositions[entity.name] = { x, y };
+                
+                // 创建实体矩形
+                const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                rect.setAttribute('x', x);
+                rect.setAttribute('y', y);
+                rect.setAttribute('width', entityWidth);
+                rect.setAttribute('height', entityHeight);
+                rect.setAttribute('rx', '5');
+                rect.setAttribute('class', 'entity');
+                rect.setAttribute('fill', entity.color || '#f0f0f0');
+                
+                // 创建标题容器
+                const titleBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                titleBg.setAttribute('x', x);
+                titleBg.setAttribute('y', y);
+                titleBg.setAttribute('width', entityWidth);
+                titleBg.setAttribute('height', '30');
+                titleBg.setAttribute('rx', '5');
+                titleBg.setAttribute('ry', '0');
+                titleBg.setAttribute('fill', 'rgba(0,0,0,0.1)');
+                
+                // 创建实体名称
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', x + entityWidth / 2);
+                text.setAttribute('y', y + 20);
+                text.setAttribute('class', 'entity-name');
+                text.textContent = entity.name;
+                
+                // 创建分隔线
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', x);
+                line.setAttribute('y1', y + 30);
+                line.setAttribute('x2', x + entityWidth);
+                line.setAttribute('y2', y + 30);
+                line.setAttribute('stroke', '#333');
+                line.setAttribute('stroke-width', '1');
+                
+                // 创建字段列表
+                entity.fields.slice(0, 5).forEach((field, fieldIndex) => {
+                    const fieldText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    fieldText.setAttribute('x', x + 10);
+                    fieldText.setAttribute('y', y + 50 + fieldIndex * 18);
+                    fieldText.setAttribute('class', 'entity-field');
+                    
+                    let fieldName = field.name;
+                    if (field.primary_key) {
+                        fieldName += ' (PK)';
+                        fieldText.setAttribute('font-weight', 'bold');
+                    } else if (field.foreign_key) {
+                        fieldName += ' (FK)';
+                        fieldText.setAttribute('fill', 'blue');
+                    }
+                    
+                    fieldText.textContent = fieldName;
+                    svg.appendChild(fieldText);
+                });
+                
+                // 如果有更多字段，显示省略号
+                if (entity.fields.length > 5) {
+                    const more = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    more.setAttribute('x', x + 10);
+                    more.setAttribute('y', y + 50 + 5 * 18);
+                    more.setAttribute('class', 'entity-field');
+                    more.textContent = '...';
+                    svg.appendChild(more);
+                }
+                
+                // 添加鼠标悬停显示所有字段
+                rect.addEventListener('mouseover', function(e) {
+                    tooltip.innerHTML = '<strong>' + entity.name + '</strong><hr/>';
+                    
+                    entity.fields.forEach(field => {
+                        let fieldHtml = field.name + ': ' + field.type;
+                        if (field.primary_key) {
+                            fieldHtml += ' <span style="color:red;font-weight:bold">(PK)</span>';
+                        } else if (field.foreign_key) {
+                            fieldHtml += ' <span style="color:blue">(FK)</span>';
+                        }
+                        
+                        tooltip.innerHTML += '<div>' + fieldHtml + '</div>';
+                    });
+                    
+                    tooltip.style.display = 'block';
+                    tooltip.style.left = (e.pageX + 10) + 'px';
+                    tooltip.style.top = (e.pageY + 10) + 'px';
+                });
+                
+                rect.addEventListener('mouseout', function() {
+                    tooltip.style.display = 'none';
+                });
+                
+                svg.appendChild(rect);
+                svg.appendChild(titleBg);
+                svg.appendChild(text);
+                svg.appendChild(line);
+            });
+            
+            // 绘制关系线
+            relationships.forEach(rel => {
+                const source = entityPositions[rel.source];
+                const target = entityPositions[rel.target];
+                
+                if (!source || !target) {
+                    console.warn('Missing position for relationship:', rel);
+                    return;
+                }
+                
+                // 计算连接点
+                const sourceX = source.x + entityWidth / 2;
+                const sourceY = source.y + entityHeight / 2;
+                const targetX = target.x + entityWidth / 2;
+                const targetY = target.y + entityHeight / 2;
+                
+                // 确定连线起点和终点（连线不穿过实体）
+                let startX, startY, endX, endY;
+                
+                // 水平距离和垂直距离
+                const dx = targetX - sourceX;
+                const dy = targetY - sourceY;
+                
+                // 确定连线方向
+                if (Math.abs(dx) > Math.abs(dy)) {
+                    // 水平连线
+                    startX = dx > 0 ? source.x + entityWidth : source.x;
+                    startY = sourceY;
+                    endX = dx > 0 ? target.x : target.x + entityWidth;
+                    endY = targetY;
+                } else {
+                    // 垂直连线
+                    startX = sourceX;
+                    startY = dy > 0 ? source.y + entityHeight : source.y;
+                    endX = targetX;
+                    endY = dy > 0 ? target.y : target.y + entityHeight;
+                }
+                
+                // 创建连线
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                
+                // 使用贝塞尔曲线创建平滑的连线
+                const midX = (startX + endX) / 2;
+                const midY = (startY + endY) / 2;
+                
+                let pathD;
+                if (Math.abs(dx) > Math.abs(dy)) {
+                    // 水平主导方向
+                    pathD = `M ${startX} ${startY} Q ${midX} ${startY} ${midX} ${midY} Q ${midX} ${endY} ${endX} ${endY}`;
+                } else {
+                    // 垂直主导方向
+                    pathD = `M ${startX} ${startY} Q ${startX} ${midY} ${midX} ${midY} Q ${endX} ${midY} ${endX} ${endY}`;
+                }
+                
+                path.setAttribute('d', pathD);
+                path.setAttribute('fill', 'none');
+                path.setAttribute('stroke', rel.color || '#5470c6');
+                path.setAttribute('stroke-width', '2');
+                path.setAttribute('marker-end', 'url(#arrow)');
+                
+                // 添加关系类型标签
+                const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                label.setAttribute('x', midX);
+                label.setAttribute('y', midY - 10);
+                label.setAttribute('text-anchor', 'middle');
+                label.setAttribute('font-size', '12');
+                label.setAttribute('fill', '#333');
+                label.setAttribute('paint-order', 'stroke');
+                label.setAttribute('stroke', 'white');
+                label.setAttribute('stroke-width', '2');
+                label.textContent = rel.label;
+                
+                // 添加鼠标悬停显示关系描述
+                path.addEventListener('mouseover', function(e) {
+                    tooltip.innerHTML = rel.description;
+                    tooltip.style.display = 'block';
+                    tooltip.style.left = (e.pageX + 10) + 'px';
+                    tooltip.style.top = (e.pageY + 10) + 'px';
+                });
+                
+                path.addEventListener('mouseout', function() {
+                    tooltip.style.display = 'none';
+                });
+                
+                svg.appendChild(path);
+                svg.appendChild(label);
+            });
+            
+            // 添加拖拽和缩放功能
+            let isDragging = false;
+            let dragStart = { x: 0, y: 0 };
+            let viewBox = { x: 0, y: 0, width: 1600, height: 1000 };
+            
+            function updateViewBox() {
+                svg.setAttribute('viewBox', `${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`);
+            }
+            
+            container.addEventListener('mousedown', function(e) {
+                if (e.target === svg || e.target.tagName === 'svg') {
+                    isDragging = true;
+                    dragStart = { x: e.clientX, y: e.clientY };
+                    e.preventDefault();
+                }
+            });
+            
+            document.addEventListener('mousemove', function(e) {
+                if (isDragging) {
+                    const dx = (e.clientX - dragStart.x) * viewBox.width / container.clientWidth;
+                    const dy = (e.clientY - dragStart.y) * viewBox.height / container.clientHeight;
+                    
+                    viewBox.x -= dx;
+                    viewBox.y -= dy;
+                    updateViewBox();
+                    
+                    dragStart = { x: e.clientX, y: e.clientY };
+                }
+            });
+            
+            document.addEventListener('mouseup', function() {
+                isDragging = false;
+            });
+            
+            // 添加鼠标滚轮缩放
+            container.addEventListener('wheel', function(e) {
+                e.preventDefault();
+                
+                const rect = container.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+                
+                // 转换鼠标位置到viewBox坐标
+                const pointX = viewBox.x + (mouseX / rect.width) * viewBox.width;
+                const pointY = viewBox.y + (mouseY / rect.height) * viewBox.height;
+                
+                // 缩放系数
+                const scale = e.deltaY < 0 ? 0.9 : 1.1;
+                
+                // 计算新的viewBox
+                viewBox.width *= scale;
+                viewBox.height *= scale;
+                
+                // 调整viewBox位置，使鼠标指向的点在缩放前后保持不变
+                viewBox.x = pointX - (mouseX / rect.width) * viewBox.width;
+                viewBox.y = pointY - (mouseY / rect.height) * viewBox.height;
+                
+                updateViewBox();
+            });
+        })();
+    </script>
+</body>
+</html>

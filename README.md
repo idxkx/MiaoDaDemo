@@ -144,6 +144,26 @@ from app.api.v1 import endpoint
 api_router.include_router(endpoint.router, tags=["endpoint"])
 ```
 
+### 数据库结构可视化
+
+项目提供了两种工具来帮助您理解数据库的物理结构，这些工具位于 `backend/tools` 目录下。
+
+1.  **交互式简化ER图（推荐）**
+    ```bash
+    # 在项目根目录执行:
+    python backend/tools/simplified_er_diagram.py
+    ```
+    这个工具会解析 `app/models` 目录下的模型文件，生成一个简化的交互式ER图 `simplified_er_diagram.html`，并保存在 `backend/tools/diagrams` 目录下。它使用 SVG 技术绘制，支持拖拽实体、查看字段和关系，可以直观地展示表之间的关联。
+
+2.  **控制台打印数据库结构**
+    ```bash
+    # 在项目根目录执行:
+    python backend/tools/simple_db_structure.py
+    ```
+    这个工具会扫描 `app/models` 目录，并在控制台打印出所有找到的数据库表及其字段信息，适合快速查看表结构。
+
+这些工具直接基于模型定义文件生成，无需连接实际数据库，适合在开发初期查看和验证数据库设计。
+
 ### 微信小程序开发
 
 1. 添加新页面
@@ -198,19 +218,30 @@ wx.request({
 - [ ] 效果图生成功能 (0%)
 - [ ] 产品优化与完善 (0%)
 
-## 贡献指南
+## 功能特点
 
-欢迎贡献代码或提出建议！请遵循以下步骤：
+### 服装识别与分类
+- 基于ResNet50深度学习模型的服装识别
+- 支持15种主要服装类型识别
+- 自动提取颜色、材质、款式等关键特征
+- 服装特征多维度标签化
 
-1. Fork 项目
-2. 创建特性分支 (`git checkout -b feature/amazing-feature`)
-3. 提交变更 (`git commit -m 'Add some amazing feature'`)
-4. 推送到分支 (`git push origin feature/amazing-feature`)
-5. 创建 Pull Request
+### 个人衣橱管理
+- 分类浏览与多条件筛选
+- 添加/编辑/删除服装项
+- 服装标签自动生成与手动编辑
+- 衣橱统计与分析
 
-## 许可证
+### 智能穿搭推荐
+- 基于场景的穿搭策略生成
+- 结合天气、场合、个人风格的多维度推荐
+- 穿搭历史记录与收藏
+- 季节性穿搭建议
 
-本项目采用 MIT 许可证 - 详情参见 [LICENSE](LICENSE) 文件
+### 穿搭效果图生成
+- AI生成穿搭效果预览
+- 高质量、个性化的穿搭视觉呈现
+- 支持保存与分享穿搭方案
 
 ## 联系方式
 

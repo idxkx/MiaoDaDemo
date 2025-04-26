@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能穿搭助手数据库ER图</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        .header {
+            background-color: #333;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+        }
+        .toolbar {
+            background-color: #f0f0f0;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .content {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+        #canvas-container {
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            position: relative;
+            background-color: white;
+            background-image: linear-gradient(#eee 1px, transparent 1px),
+                              linear-gradient(90deg, #eee 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        #er-canvas {
+            position: absolute;
+            transform-origin: 0 0;
+        }
+        .entity {
+            position: absolute;
+            width: 220px;
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            overflow: hidden;
+            cursor: move;
+        }
+        .entity-header {
+            padding: 8px 12px;
+            color: white;
+            font-weight: bold;
+        }
+        .entity-body {
+            max-height: 250px;
+            overflow-y: auto;
+        }
+        .entity-field {
+            padding: 5px 10px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+        }
+        .field-name { font-weight: bold; }
+        .field-type { color: #666; }
+        .primary-key { color: #e74c3c; }
+        .foreign-key { color: #3498db; }
+        .tooltip {
+            position: absolute;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            font-size: 12px;
+            max-width: 300px;
+            z-index: 1000;
+            display: none;
+        }
+        .loading {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255,255,255,0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+            z-index: 999;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        button {
+            padding: 5px 10px;
+            margin-right: 5px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .error-message {
+            color: red;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>智能穿搭助手数据库ER图</h1>
+        </div>
+        <div class="toolbar">
+            <div>
+                <button id="zoom-in">放大</button>
+                <button id="zoom-out">缩小</button>
+                <button id="reset-view">重置视图</button>
+                <button id="auto-layout">自动布局</button>
+            </div>
+            <div>
+                <span>一对多: <span style="color:#5470c6">——</span></span>
+                <span style="margin-left:15px">多对多: <span style="color:#91cc75">——</span></span>
+            </div>
+        </div>
+        <div class="content">
+            <div id="canvas-container">
+                <div id="er-canvas"></div>
+            </div>
+            <div id="tooltip" class="tooltip"></div>
+            <div class="loading">
+                <div class="spinner"></div>
+                <span>加载中...</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 先加载数据文件 -->
+    <script src="er_data.js"></script>
+    
+    <!-- 然后加载主脚本 -->
+    <script>
+        // 错误处理
+        window.onerror = function(message, source, lineno) {
+            document.querySelector('.loading').innerHTML = 
+                `<div class="error-message">
+                    <p>加载出错: ${message}</p>
+                    <p>位置: ${source}:${lineno}</p>
+                    <button onclick="location.reload()">重新加载</button>
+                </div>`;
+            console.error('错误:', message, source, lineno);
+            return true;
+        };
+        
+        // 全局变量
+        const canvasContainer = document.getElementById('canvas-container');
+        const erCanvas = document.getElementById('er-canvas');
+        const tooltip = document.getElementById('tooltip');
+        
+        // 视图状态
+        let scale = 1;
+        let offsetX = 0;
+        let offsetY = 0;
+        let isDragging = false;
+        let dragStartX = 0;
+        let dragStartY = 0;
+        let draggingEntity = null;
+        let dragOffsetX = 0;
+        let dragOffsetY = 0;
+        
+        // 实体位置
+        const entityPositions = {};
+        
+        // 箭头标记SVG定义
+        const svgns = "http://www.w3.org/2000/svg";
+        const relationshipSvg = document.createElementNS(svgns, "svg");
+        relationshipSvg.style.position = "absolute";
+        relationshipSvg.style.width = "100%";
+        relationshipSvg.style.height = "100%";
+        relationshipSvg.style.pointerEvents = "none";
+        relationshipSvg.style.zIndex = "-1";
+        erCanvas.appendChild(relationshipSvg);
+        
+        // 初始化函数
+        function init() {
+            console.log("开始初始化...");
+            try {
+                console.log(`加载了 ${entities.length} 个实体和 ${relationships.length} 个关系`);
+                
+                // 设置画布大小
+                erCanvas.style.width = "3000px";
+                erCanvas.style.height = "2000px";
+                
+                // 创建实体框
+                createEntities();
+                
+                // 布局实体和创建关系线
+                autoLayout();
+                
+                // 绑定事件
+                bindEvents();
+                
+                // 隐藏加载中提示
+                document.querySelector('.loading').style.display = 'none';
+                
+                console.log("初始化完成");
+            } catch (error) {
+                console.error("初始化错误:", error);
+                document.querySelector('.loading').innerHTML = 
+                    `<div class="error-message">
+                        <p>初始化错误: ${error.message}</p>
+                        <button onclick="location.reload()">重新加载</button>
+                    </div>`;
+            }
+        }
+        
+        // 创建实体框
+        function createEntities() {
+            entities.forEach(entity => {
+                // 创建实体容器
+                const entityElement = document.createElement('div');
+                entityElement.className = 'entity';
+                entityElement.id = `entity-${entity.id}`;
+                entityElement.dataset.id = entity.id;
+                
+                // 创建头部
+                const header = document.createElement('div');
+                header.className = 'entity-header';
+                header.style.backgroundColor = entity.color;
+                header.textContent = entity.name;
+                entityElement.appendChild(header);
+                
+                // 创建实体内容区
+                const body = document.createElement('div');
+                body.className = 'entity-body';
+                
+                // 添加字段
+                entity.fields.forEach(field => {
+                    const fieldElement = document.createElement('div');
+                    fieldElement.className = 'entity-field';
+                    
+                    const nameElement = document.createElement('div');
+                    nameElement.className = 'field-name';
+                    if (field.primary_key) {
+                        nameElement.classList.add('primary-key');
+                        nameElement.innerHTML = field.name + ' 🔑';
+                    } else if (field.foreign_key) {
+                        nameElement.classList.add('foreign-key');
+                        nameElement.innerHTML = field.name + ' 🔗';
+                    } else {
+                        nameElement.textContent = field.name;
+                    }
+                    
+                    const typeElement = document.createElement('div');
+                    typeElement.className = 'field-type';
+                    typeElement.textContent = field.type;
+                    
+                    fieldElement.appendChild(nameElement);
+                    fieldElement.appendChild(typeElement);
+                    body.appendChild(fieldElement);
+                });
+                
+                entityElement.appendChild(body);
+                erCanvas.appendChild(entityElement);
+                
+                // 设置初始位置（随机，稍后会在自动布局中调整）
+                entityPositions[entity.id] = {
+                    x: Math.random() * 500,
+                    y: Math.random() * 500,
+                    width: 220,
+                    height: entityElement.offsetHeight || 200
+                };
+                
+                // 添加拖拽事件
+                entityElement.addEventListener('mousedown', function(e) {
+                    if (e.button === 0) { // 左键点击
+                        draggingEntity = entity.id;
+                        const rect = entityElement.getBoundingClientRect();
+                        dragOffsetX = e.clientX - rect.left;
+                        dragOffsetY = e.clientY - rect.top;
+                        e.stopPropagation();
+                    }
+                });
+            });
+        }
+        
+        // 自动布局所有实体
+        function autoLayout() {
+            // 简单的分层布局
+            const itemsPerRow = 3;
+            const horizontalSpacing = 300;
+            const verticalSpacing = 200;
+            
+            entities.forEach((entity, index) => {
+                const row = Math.floor(index / itemsPerRow);
+                const col = index % itemsPerRow;
+                
+                entityPositions[entity.id] = {
+                    x: col * horizontalSpacing + 50,
+                    y: row * verticalSpacing + 50,
+                    width: 220,
+                    height: document.getElementById(`entity-${entity.id}`).offsetHeight || 200
+                };
+                
+                updateEntityPosition(entity.id);
+            });
+            
+            // 绘制关系线
+            drawRelationships();
+        }
+        
+        // 更新实体位置
+        function updateEntityPosition(entityId) {
+            const position = entityPositions[entityId];
+            const element = document.getElementById(`entity-${entityId}`);
+            if (element && position) {
+                element.style.transform = `translate(${position.x}px, ${position.y}px)`;
+            }
+        }
+        
+        // 绘制关系线
+        function drawRelationships() {
+            console.log('绘制关系线开始...');
+            // 清空现有的线
+            while (relationshipSvg.firstChild) {
+                relationshipSvg.removeChild(relationshipSvg.firstChild);
+            }
+            
+            // 确保SVG容器可见且在最上层 (尝试)
+            relationshipSvg.style.zIndex = "1";
+            relationshipSvg.style.pointerEvents = "auto"; // 允许事件穿透，便于调试
+            
+            // 为每个关系创建连接线
+            relationships.forEach(rel => {
+                const sourceId = rel.source;
+                const targetId = rel.target;
+                const source = entityPositions[sourceId];
+                const target = entityPositions[targetId];
+                
+                if (!source || !target) {
+                    console.warn(`关系 ${rel.id} 的源实体 ${sourceId} 或目标实体 ${targetId} 未找到位置信息`);
+                    return;
+                }
+                
+                // 计算连接点 (简化为中心点)
+                const sourceX = source.x + source.width / 2;
+                const sourceY = source.y + source.height / 2;
+                const targetX = target.x + target.width / 2;
+                const targetY = target.y + target.height / 2;
+                
+                console.log(`绘制关系: ${sourceId} (${sourceX},${sourceY}) -> ${targetId} (${targetX},${targetY})`);
+                
+                // 创建直线 (替换贝塞尔曲线进行调试)
+                const line = document.createElementNS(svgns, "line");
+                line.setAttribute("x1", sourceX);
+                line.setAttribute("y1", sourceY);
+                line.setAttribute("x2", targetX);
+                line.setAttribute("y2", targetY);
+                line.setAttribute("stroke", rel.color || "#888"); // 默认灰色
+                line.setAttribute("stroke-width", "2");
+                
+                // 添加箭头标记 (可选，但有助于调试)
+                line.setAttribute("marker-end", "url(#arrowhead)"); 
+                
+                // 创建标签 (简化位置)
+                const midX = (sourceX + targetX) / 2;
+                const midY = (sourceY + targetY) / 2;
+                
+                const text = document.createElementNS(svgns, "text");
+                text.setAttribute("x", midX);
+                text.setAttribute("y", midY - 5); // 稍微向上偏移
+                text.setAttribute("text-anchor", "middle");
+                text.setAttribute("font-size", "11");
+                text.setAttribute("fill", "#333");
+                text.textContent = rel.label || 'rel'; // 显示标签
+                
+                // 添加到SVG
+                relationshipSvg.appendChild(line);
+                relationshipSvg.appendChild(text);
+            });
+            
+            // 添加箭头定义 (如果之前没有)
+            let defs = relationshipSvg.querySelector('defs');
+            if (!defs) {
+                defs = document.createElementNS(svgns, 'defs');
+                relationshipSvg.insertBefore(defs, relationshipSvg.firstChild);
+            }
+            if (!defs.querySelector('#arrowhead')) {
+                const marker = document.createElementNS(svgns, "marker");
+                marker.setAttribute("id", "arrowhead");
+                marker.setAttribute("markerWidth", "10");
+                marker.setAttribute("markerHeight", "7");
+                marker.setAttribute("refX", "10"); // 调整箭头位置，使其在直线末端
+                marker.setAttribute("refY", "3.5");
+                marker.setAttribute("orient", "auto");
+                const polygon = document.createElementNS(svgns, "polygon");
+                polygon.setAttribute("points", "0 0, 10 3.5, 0 7");
+                polygon.setAttribute("fill", "#555"); // 箭头颜色
+                marker.appendChild(polygon);
+                defs.appendChild(marker);
+            }
+            console.log('绘制关系线结束。');
+        }
+        
+        // 绑定事件处理
+        function bindEvents() {
+            // 鼠标移动事件
+            document.addEventListener("mousemove", function(e) {
+                if (draggingEntity) {
+                    // 拖动实体
+                    const containerRect = canvasContainer.getBoundingClientRect();
+                    const x = (e.clientX - containerRect.left - dragOffsetX) / scale;
+                    const y = (e.clientY - containerRect.top - dragOffsetY) / scale;
+                    
+                    entityPositions[draggingEntity].x = x + offsetX;
+                    entityPositions[draggingEntity].y = y + offsetY;
+                    
+                    updateEntityPosition(draggingEntity);
+                    // 暂时移除拖动过程中的关系线更新
+                    // drawRelationships(); 
+                    
+                } else if (isDragging) {
+                    // 拖动画布
+                    const deltaX = (e.clientX - dragStartX) / scale;
+                    const deltaY = (e.clientY - dragStartY) / scale;
+                    
+                    offsetX -= deltaX;
+                    offsetY -= deltaY;
+                    
+                    updateCanvasTransform();
+                    
+                    dragStartX = e.clientX;
+                    dragStartY = e.clientY;
+                }
+            });
+            
+            // 鼠标松开事件
+            document.addEventListener("mouseup", function() {
+                if (draggingEntity) {
+                    // 如果刚刚结束拖动实体，则更新关系线
+                    drawRelationships();
+                }
+                draggingEntity = null;
+                isDragging = false;
+                canvasContainer.style.cursor = "default";
+            });
+            
+            // 画布拖动
+            canvasContainer.addEventListener("mousedown", function(e) {
+                if (e.button === 0 && !draggingEntity) {
+                    isDragging = true;
+                    dragStartX = e.clientX;
+                    dragStartY = e.clientY;
+                    canvasContainer.style.cursor = "grab";
+                }
+            });
+            
+            // 缩放按钮
+            document.getElementById("zoom-in").addEventListener("click", function() {
+                scale *= 1.2;
+                updateCanvasTransform();
+            });
+            
+            document.getElementById("zoom-out").addEventListener("click", function() {
+                scale /= 1.2;
+                updateCanvasTransform();
+            });
+            
+            // 重置视图
+            document.getElementById("reset-view").addEventListener("click", function() {
+                scale = 1;
+                offsetX = 0;
+                offsetY = 0;
+                updateCanvasTransform();
+            });
+            
+            // 自动布局
+            document.getElementById("auto-layout").addEventListener("click", autoLayout);
+            
+            // 鼠标滚轮缩放
+            canvasContainer.addEventListener("wheel", function(e) {
+                e.preventDefault();
+                
+                const rect = canvasContainer.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+                
+                // 计算鼠标在画布坐标系中的位置
+                const canvasX = mouseX / scale + offsetX;
+                const canvasY = mouseY / scale + offsetY;
+                
+                // 更新缩放
+                if (e.deltaY < 0) {
+                    scale *= 1.1;
+                } else {
+                    scale /= 1.1;
+                }
+                
+                // 调整偏移以保持鼠标指向的点不变
+                offsetX = canvasX - mouseX / scale;
+                offsetY = canvasY - mouseY / scale;
+                
+                updateCanvasTransform();
+            });
+        }
+        
+        // 更新画布变换
+        function updateCanvasTransform() {
+            erCanvas.style.transform = `scale(${scale}) translate(${-offsetX}px, ${-offsetY}px)`;
+        }
+        
+        // 启动初始化
+        window.addEventListener("load", init);
+    </script>
+</body>
+</html>
