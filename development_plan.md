@@ -3,7 +3,7 @@
 ## 项目状态概览
 - [x] 需求分析与规划 (100%)
 - [x] 架构设计和技术选型 (100%)
-- [ ] 开发环境与基础设施 (0%)
+- [/] 开发环境与基础设施 (40%)
 - [ ] 核心功能开发 (0%)
 - [ ] 产品优化与测试 (0%)
 
@@ -14,23 +14,23 @@
 - [x] 技术栈选择
 - [x] 架构设计
 - [x] 数据模型设计
-- [ ] 开发环境配置
-  - [ ] 本地开发环境准备
-  - [ ] 数据库设置（选项：SQLite、本地PostgreSQL或Docker容器）
-  - [ ] 缓存设置（选项：内存缓存、本地文件或Redis）
-  - [ ] 设置项目基础环境变量
-- [ ] 基础代码仓库搭建
-  - [ ] 创建后端项目骨架（FastAPI）
-  - [ ] 创建数据库模型初始版本
+- [x] 开发环境配置
+  - [x] 本地开发环境准备
+  - [x] 数据库设置（**本地开发优先使用 SQLite**）
+  - [x] 缓存设置（**本地开发优先使用内存缓存**）
+  - [x] 设置项目基础环境变量
+- [x] 基础代码仓库搭建
+  - [x] 创建后端项目骨架（FastAPI）
+  - [x] 创建数据库模型初始版本
   - [ ] 实现基础用户认证
-  - [ ] 搭建微信小程序框架
-  - [ ] 配置Git仓库与工作流
+  - [/] 搭建微信小程序框架
+  - [x] 配置Git仓库与工作流
 - [ ] API与服务配置
-  - [ ] 申请微信小程序AppID
+  - [-] 申请微信小程序AppID
   - [ ] 申请DeepSeek API密钥
   - [ ] 准备本地存储服务
-  - [ ] 创建.env配置文件
-- [ ] **验证点**: 本地基础框架可运行，测试环境正常
+  - [x] 创建.env配置文件
+- [x] **验证点**: 本地基础框架（后端FastAPI, 前端基础）可运行，SQLite数据库连接正常
 
 ### 2. 服装识别功能
 - [ ] 服装数据模型实现
@@ -119,7 +119,7 @@
 - [ ] 安装DB管理工具（可选）
 
 ### 前端开发环境
-- [ ] 下载微信开发者工具
+- [-] 下载微信开发者工具
 - [x] 安装Node.js环境
 - [ ] 准备UI资源与素材
 
@@ -136,8 +136,9 @@
    - 高优先级: 服装识别和衣橱管理（核心功能）
    - 中优先级: 穿搭推荐（依赖衣橱内容）
    - 低优先级: 效果图生成（可选增强功能）
-4. **本地优先**: 先在本地完成开发和测试，功能稳定后再部署到云服务器
-5. **简化优先**: 优先使用简单的开发环境和配置，减少不必要的复杂性
+4. **本地优先**: **优先使用 SQLite 在本地**完成开发和测试，功能稳定后再考虑部署到云服务器或使用其他数据库。
+5. **简化优先**: **优先使用 SQLite 和内存缓存**等简单的本地开发环境配置，减少不必要的复杂性。
+6. **聚焦模拟**: **当前阶段专注于本地功能模拟与调试**，暂缓处理微信小程序平台的特定对接和部署细节。
 
 ## 关键技术挑战
 
@@ -150,11 +151,11 @@
 
 - 开发环境: Python 3.12+
 - 数据库选项: 
-  - 开发: SQLite（简单）
-  - 生产: PostgreSQL（完整功能）
+  - **开发 (优先): SQLite** (简单，易于本地调试)
+  - 生产 (备选): PostgreSQL (功能更全，适用于部署)
 - 缓存选项:
-  - 开发: 内存缓存或文件缓存
-  - 生产: Redis
+  - **开发 (优先): 内存缓存** (最简单，无需配置)
+  - 生产 (备选): Redis (更强大，适用于部署)
 - 后端: FastAPI
 - 前端: 微信小程序
 - AI服务: 服装识别模型(ResNet50), DeepSeek API, Stable Diffusion
@@ -167,24 +168,81 @@
 4. 创建后端项目骨架
 5. 实现服装模型集成基础功能
 
-## 项目目录结构
+## 项目目录结构 (当前示例)
 
 ```
-/backend
-  /app
-    /api
-    /models
-    /services
-    /core
-  main.py
-/frontend
-  app.js
-  app.json
+MiaoDaDemo/
+├── backend/
+│   ├── alembic/              # 数据库迁移管理
+│   │   └── versions/
+│   ├── app/                  # 应用核心代码
+│   │   ├── api/              # API路由
+│   │   │   └── v1/
+│   │   │       └── endpoints/ # API端点实现
+│   │   ├── core/             # 配置、核心逻辑等
+│   │   │   └── config/
+│   │   ├── db/               # 数据库会话、基础操作
+│   │   ├── models/           # SQLAlchemy 数据模型
+│   │   ├── schemas/          # Pydantic 数据校验模型
+│   │   ├── services/         # 业务逻辑服务
+│   │   └── utils/            # 工具函数
+│   ├── tests/                # 测试代码
+│   └── main.py               # FastAPI 应用入口
+├── frontend/                 # 微信小程序前端
+│   ├── public/
+│   └── src/
+├── models/                   # AI 模型文件
+│   ├── MD_resnet50_40_32_10e4_clothes_model/
+│   └── my_clothes_model/
+├── tools/                    # 开发工具脚本
+├── .gitignore
+├── docker-compose.yml        # Docker 配置 (暂用于生产备选)
+├── development_plan.md       # 本开发计划
+├── README.md                 # 项目说明
+└── ... (其他配置文件)
 ```
 
-## .env配置文件
+## .env配置文件 (示例)
 
-DATABASE_URL=sqlite:///app.db
+```dotenv
+# .env 文件 - 项目环境变量配置
+# 注意：此文件包含敏感信息，请确保已将其添加到 .gitignore 文件中，不要提交到代码库！
+
+# --- 应用基础设置 ---
+ENVIRONMENT=development
+APP_HOST=127.0.0.1
+APP_PORT=8000
+LOG_LEVEL=INFO
+
+# --- 数据库 ---
+DATABASE_URL=sqlite:///./app.db
+
+# --- 缓存 ---
 CACHE_TYPE=memory
-SECRET_KEY=dev_secret_key
+# REDIS_HOST=localhost ... (注释掉)
+
+# --- 安全与认证 ---
+SECRET_KEY=your_strong_dev_secret_key_here # !! 务必替换 !!
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+ALGORITHM=HS256
+
+# --- API 密钥与端点 ---
+# 微信小程序 AppID (本地模拟阶段暂不需要)
+# WECHAT_APPID=123123123
+# 微信小程序 AppSecret (本地模拟阶段暂不需要)
+# WECHAT_APP_SECRET=your_wechat_app_secret
+DEEPSEEK_API_KEY=345345345 # 替换为你的 DeepSeek Key
+# STABLE_DIFFUSION_API_URL=http://localhost:7860 (注释掉)
+FRONTEND_API_BASE_URL=http://${APP_HOST}:${APP_PORT}
+
+# --- AI 模型配置 ---
 ACTIVE_CLOTHING_MODEL=MD_resnet50_40_32_10e4_clothes_model
+MODEL_BASE_PATH=./models/
+
+# --- 文件存储 ---
+IMAGE_STORAGE_PATH=./uploads/images/
+# IMAGE_BASE_URL=... (注释掉)
+
+# --- 其他配置 ---
+# SMTP_HOST=... (注释掉)
+```
