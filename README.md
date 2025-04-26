@@ -144,26 +144,6 @@ from app.api.v1 import endpoint
 api_router.include_router(endpoint.router, tags=["endpoint"])
 ```
 
-### 数据库结构可视化
-
-项目提供了两种工具来帮助您理解数据库的物理结构，这些工具位于 `backend/tools` 目录下。
-
-1.  **交互式简化ER图（推荐）**
-    ```bash
-    # 在项目根目录执行:
-    python backend/tools/simplified_er_diagram.py
-    ```
-    这个工具会解析 `app/models` 目录下的模型文件，生成一个简化的交互式ER图 `simplified_er_diagram.html`，并保存在 `backend/tools/diagrams` 目录下。它使用 SVG 技术绘制，支持拖拽实体、查看字段和关系，可以直观地展示表之间的关联。
-
-2.  **控制台打印数据库结构**
-    ```bash
-    # 在项目根目录执行:
-    python backend/tools/simple_db_structure.py
-    ```
-    这个工具会扫描 `app/models` 目录，并在控制台打印出所有找到的数据库表及其字段信息，适合快速查看表结构。
-
-这些工具直接基于模型定义文件生成，无需连接实际数据库，适合在开发初期查看和验证数据库设计。
-
 ### 微信小程序开发
 
 1. 添加新页面
@@ -198,52 +178,35 @@ wx.request({
 **选择使用模型：**
 1. 编辑项目根目录下的 `.env` 文件（如果不存在则从 `.env.example` 复制创建）。
 2. 添加或修改 `ACTIVE_CLOTHING_MODEL` 变量，将其值设置为 `models/` 目录下你希望使用的模型的子文件夹名称。
-   ```dotenv
-   ACTIVE_CLOTHING_MODEL=MD_resnet50_40_32_10e4_clothes_model
-   ```
-3. 重启后端服务器，服务将加载并使用您指定的模型。
+```
+# .env 文件示例
+ACTIVE_CLOTHING_MODEL=my_clothes_model
+```
+3. 重启后端服务以加载新选择的模型。
 
-**查询可用模型：**
-- 使用 `GET /api/v1/models/available` 接口获取所有可用的模型名称列表。
-- 使用 `GET /api/v1/models/current` 接口获取当前服务器正在使用的模型名称。
+#### 模型切换 API (可选)
 
-## 项目进度
+如果需要运行时动态切换模型，可以考虑实现一个API端点来更新配置并重新加载模型服务（需要更复杂的实现）。
 
-**详细开发计划请参考**: [development_plan.md](./development_plan.md)
+## 数据库设计参考
 
-- [x] 项目基础设施 (80%)
-- [ ] 服装识别功能 (0%)
-- [ ] 衣橱管理功能 (0%)
-- [ ] 穿搭推荐功能 (0%)
-- [ ] 效果图生成功能 (0%)
-- [ ] 产品优化与完善 (0%)
+由于项目侧重于核心功能的快速迭代，目前**没有提供自动生成 ER 图的工具**。
 
-## 功能特点
+理解数据库结构的最佳方式是：
 
-### 服装识别与分类
-- 基于ResNet50深度学习模型的服装识别
-- 支持15种主要服装类型识别
-- 自动提取颜色、材质、款式等关键特征
-- 服装特征多维度标签化
+1.  **阅读模型代码 (主要方式)**：
+    *   数据库的详细表结构、字段定义（包括数据类型、是否主键/外键）以及表之间的关系，最终由 `backend/app/models/` 目录下的 Python 文件 (`.py`) 定义。
+    *   直接阅读这些模型文件是了解当前数据库设计的最准确途径。
 
-### 个人衣橱管理
-- 分类浏览与多条件筛选
-- 添加/编辑/删除服装项
-- 服装标签自动生成与手动编辑
-- 衣橱统计与分析
+2.  **手动绘制或查看 ER 图 (可选)**：
+    *   如果你需要一个可视化的 ER 图来帮助理解，可以使用支持 [Mermaid 语法](https://mermaid.js.org/syntax/entityRelationshipDiagram.html) 的工具（如在线的 [Mermaid Live Editor](https://mermaid.live/) 或其他绘图软件）。
+    *   你需要**手动**将模型代码中的信息转换为 Mermaid 代码。在转换时，可以参考 `.cursor/rules/er-diagram-standards.mdc` 文件中定义的核心规范，以了解期望的图表样式（例如如何标记主/外键，以及中英文显示的要求）。
+    *   如果你之前运行过 `tools/generate_mermaid.py` 脚本并保存了其输出，你可以直接将那段 Mermaid 代码粘贴到渲染工具中查看。
 
-### 智能穿搭推荐
-- 基于场景的穿搭策略生成
-- 结合天气、场合、个人风格的多维度推荐
-- 穿搭历史记录与收藏
-- 季节性穿搭建议
+## 贡献代码
 
-### 穿搭效果图生成
-- AI生成穿搭效果预览
-- 高质量、个性化的穿搭视觉呈现
-- 支持保存与分享穿搭方案
+欢迎提交 Pull Request！请确保代码遵循项目规范并通过测试。
 
 ## 联系方式
 
-- 项目维护者: Your Name
-- 电子邮箱: your.email@example.com 
+如有问题，请联系 [你的名字] ([你的邮箱]) 
