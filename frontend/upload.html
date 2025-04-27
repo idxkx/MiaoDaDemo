@@ -202,258 +202,347 @@
     <!-- 加载JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/auth.js"></script>
-    <script src="js/image-upload.js"></script>
-    <script src="js/recognition.js"></script>
+    <script src="js/main.js"></script>
     <script>
+        // 辅助函数 - 简单日志
+        function log(message) {
+            console.log(`[Upload] ${message}`);
+        }
+        
+        // 全局变量
+        let selectedFile = null;
+        let editMode = false;
+        let editItemId = null;
+        let imageUploaded = false;
+        let imageUrl = null;
+        
+        // DOM 元素
+        const fileInput = document.getElementById('fileInput');
+        const dropZone = document.getElementById('dropZone');
+        const imagePreview = document.getElementById('imagePreview');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const saveBtn = document.getElementById('saveBtn');
+        const clothesForm = document.getElementById('clothesForm');
+        
+        // 检查是否是编辑模式
         document.addEventListener('DOMContentLoaded', function() {
-            // 检查登录状态
-            if (!window.Auth || !window.Auth.isLoggedIn()) {
+            const params = new URLSearchParams(window.location.search);
+            const editId = params.get('edit');
+            
+            if (editId) {
+                log(`编辑模式，服装ID: ${editId}`);
+                editMode = true;
+                editItemId = editId;
+                loadClothesItem(editId);
+                document.querySelector('h1').textContent = '编辑服装';
+            }
+            
+            // 检查是否已登录
+            updateAuthUI();
+        });
+        
+        // 更新认证UI
+        function updateAuthUI() {
+            const TOKEN_KEY = 'token'; // 重要：与auth.js保持一致
+            const token = localStorage.getItem(TOKEN_KEY);
+            
+            log(`认证状态检查，令牌存在: ${!!token}`);
+            
+            if (token) {
+                document.getElementById('loginItem').classList.add('d-none');
+                document.getElementById('userProfileItem').classList.remove('d-none');
+                document.getElementById('logoutItem').classList.remove('d-none');
+                
+                // 添加登出事件
+                document.getElementById('logoutLink').addEventListener('click', function(e) {
+                    e.preventDefault();
+                    localStorage.removeItem(TOKEN_KEY);
+                    localStorage.removeItem('user_data');
+                    window.location.href = 'index.html';
+                });
+            }
+        }
+        
+        // 文件选择事件
+        fileInput.addEventListener('change', function(e) {
+            if (this.files && this.files[0]) {
+                selectedFile = this.files[0];
+                
+                // 预览图片
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                    imagePreview.style.display = 'block';
+                    uploadBtn.disabled = false;
+                };
+                reader.readAsDataURL(selectedFile);
+            }
+        });
+        
+        // 拖放区域事件
+        dropZone.addEventListener('click', function() {
+            fileInput.click();
+        });
+        
+        dropZone.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.classList.add('active');
+        });
+        
+        dropZone.addEventListener('dragleave', function() {
+            this.classList.remove('active');
+        });
+        
+        dropZone.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.classList.remove('active');
+            
+            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                selectedFile = e.dataTransfer.files[0];
+                fileInput.files = e.dataTransfer.files;
+                
+                // 预览图片
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                    imagePreview.style.display = 'block';
+                    uploadBtn.disabled = false;
+                };
+                reader.readAsDataURL(selectedFile);
+            }
+        });
+        
+        // 上传图片按钮
+        uploadBtn.addEventListener('click', function() {
+            if (!selectedFile) {
+                alert('请先选择图片');
+                return;
+            }
+            
+            if (!isUserLoggedIn()) {
+                alert('请先登录');
+                localStorage.setItem('redirectAfterLogin', window.location.href);
                 window.location.href = 'login.html';
                 return;
             }
             
-            // 更新导航栏显示
-            document.getElementById('loginItem').classList.add('d-none');
-            document.getElementById('userProfileItem').classList.remove('d-none');
-            document.getElementById('logoutItem').classList.remove('d-none');
-            
-            // 获取DOM元素
-            const dropZone = document.getElementById('dropZone');
-            const fileInput = document.getElementById('fileInput');
-            const uploadBtn = document.getElementById('uploadBtn');
-            const saveBtn = document.getElementById('saveBtn');
-            const clothesForm = document.getElementById('clothesForm');
-            const categorySelect = document.getElementById('category');
-            
-            // 上传结果
-            let uploadResult = null;
-            
-            // 初始化图片上传
-            window.ImageUploader.initImageUploader(
-                'fileInput',
-                'imagePreview',
-                'uploadBtn',
-                function(result) {
-                    // 上传成功回调
-                    console.log('上传成功:', result);
-                    uploadResult = result;
-                    saveBtn.disabled = false;
-                    
-                    // 尝试自动识别服装类型
-                    autoRecognizeClothing(fileInput.files[0]);
-                },
-                function(error) {
-                    // 上传失败回调
-                    console.error('上传失败:', error);
-                    alert('图片上传失败: ' + error.message);
-                }
-            );
-            
-            // 拖放文件功能
-            dropZone.addEventListener('click', () => {
-                fileInput.click();
-            });
-            
-            dropZone.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                dropZone.classList.add('active');
-            });
-            
-            dropZone.addEventListener('dragleave', () => {
-                dropZone.classList.remove('active');
-            });
-            
-            dropZone.addEventListener('drop', (e) => {
-                e.preventDefault();
-                dropZone.classList.remove('active');
+            uploadImage(selectedFile);
+        });
+        
+        // 图片上传函数
+        async function uploadImage(file) {
+            try {
+                uploadBtn.disabled = true;
+                uploadBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 上传中...';
                 
-                if (e.dataTransfer.files.length) {
-                    fileInput.files = e.dataTransfer.files;
-                    const event = new Event('change', { bubbles: true });
-                    fileInput.dispatchEvent(event);
-                }
-            });
-            
-            // 自动识别服装函数
-            async function autoRecognizeClothing(imageFile) {
-                if (!imageFile || !window.ClothingRecognition) return;
+                const formData = new FormData();
+                formData.append('file', file);
                 
-                try {
-                    // 显示识别状态
-                    const statusAlert = document.createElement('div');
-                    statusAlert.className = 'alert alert-info mt-3';
-                    statusAlert.id = 'recognitionStatus';
-                    statusAlert.textContent = '正在识别服装...请稍候';
-                    document.querySelector('.preview-container').after(statusAlert);
-                    
-                    // 调用识别API
-                    const result = await window.ClothingRecognition.analyzeImage(imageFile);
-                    console.log('识别结果:', result);
-                    
-                    // 自动填充表单
-                    if (result && result.prediction) {
-                        // 更新分类
-                        const predictedClass = result.prediction.predicted_class;
-                        const categoryMapping = {
-                            'T恤': 'top',
-                            '衬衫': 'top',
-                            '卫衣': 'top',
-                            '毛衣': 'top',
-                            '西装': 'outerwear',
-                            '夹克': 'outerwear',
-                            '羽绒服': 'outerwear',
-                            '风衣': 'outerwear',
-                            '牛仔裤': 'bottom',
-                            '休闲裤': 'bottom',
-                            '西裤': 'bottom',
-                            '短裤': 'bottom',
-                            '运动裤': 'bottom',
-                            '连衣裙': 'dress',
-                            '半身裙': 'bottom',
-                            '旗袍': 'dress',
-                            '礼服': 'dress',
-                            '运动鞋': 'shoes',
-                            '皮鞋': 'shoes',
-                            '高跟鞋': 'shoes',
-                            '靴子': 'shoes',
-                            '凉鞋': 'shoes',
-                            '拖鞋': 'shoes',
-                            '帽子': 'accessory',
-                            '围巾': 'accessory',
-                            '领带': 'accessory',
-                            '手套': 'accessory',
-                            '袜子': 'accessory',
-                            '腰带': 'accessory',
-                            '眼镜': 'accessory',
-                            '手表': 'accessory',
-                            '项链': 'accessory',
-                            '手链': 'accessory',
-                            '耳环': 'accessory',
-                            '戒指': 'accessory',
-                            '包包': 'accessory',
-                            '背包': 'accessory',
-                            '手提包': 'accessory',
-                            '钱包': 'accessory',
-                            '行李箱': 'accessory'
-                        };
-                        
-                        if (categoryMapping[predictedClass]) {
-                            categorySelect.value = categoryMapping[predictedClass];
-                        }
-                        
-                        // 填充名称和子分类
-                        document.getElementById('clothesName').value = predictedClass;
-                        document.getElementById('subCategory').value = predictedClass;
-                    }
-                    
-                    // 填充标签
-                    if (result && result.generated_tags && result.generated_tags.length > 0) {
-                        // 更新状态
-                        statusAlert.className = 'alert alert-success mt-3';
-                        statusAlert.innerHTML = `
-                            <strong>自动识别结果:</strong> ${result.prediction.predicted_class} (${Math.round(result.prediction.confidence * 100)}% 置信度)
-                            <div class="mt-2">
-                                <small>生成标签: ${result.generated_tags.join(', ')}</small>
-                            </div>
-                        `;
-                    } else {
-                        statusAlert.className = 'alert alert-warning mt-3';
-                        statusAlert.textContent = '服装识别完成，但无法生成有效标签。请手动填写信息。';
-                    }
-                    
-                } catch (error) {
-                    console.error('识别错误:', error);
-                    const statusAlert = document.getElementById('recognitionStatus');
-                    if (statusAlert) {
-                        statusAlert.className = 'alert alert-danger mt-3';
-                        statusAlert.textContent = '服装识别失败: ' + error.message;
-                    }
+                log('准备上传图片...');
+                
+                // 获取认证令牌
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    throw new Error('未登录，无法上传图片');
                 }
+                
+                log(`使用认证令牌: ${token.substring(0, 10)}...`);
+                
+                const response = await fetch('http://127.0.0.1:8000/api/v1/clothes/upload-image/', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+                
+                log(`上传响应状态: ${response.status}`);
+                
+                if (response.status === 401) {
+                    alert('登录已过期，请重新登录');
+                    localStorage.removeItem('token');
+                    localStorage.setItem('redirectAfterLogin', window.location.href);
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || '上传失败');
+                }
+                
+                const data = await response.json();
+                log('上传成功，响应:', data);
+                
+                imageUploaded = true;
+                imageUrl = data.image_url;
+                
+                uploadBtn.innerHTML = '上传成功';
+                uploadBtn.classList.remove('btn-primary');
+                uploadBtn.classList.add('btn-success');
+                
+                saveBtn.disabled = false;
+                
+                // 启用表单
+                const formInputs = document.querySelectorAll('#clothesForm input, #clothesForm select, #clothesForm textarea');
+                formInputs.forEach(input => {
+                    input.disabled = false;
+                });
+                
+            } catch (error) {
+                console.error('上传图片错误:', error);
+                uploadBtn.innerHTML = '上传失败';
+                uploadBtn.classList.remove('btn-primary');
+                uploadBtn.classList.add('btn-danger');
+                
+                alert(`上传失败: ${error.message}`);
+            } finally {
+                uploadBtn.disabled = false;
+            }
+        }
+        
+        // 判断用户是否已登录
+        function isUserLoggedIn() {
+            return !!localStorage.getItem('token');
+        }
+        
+        // 加载服装项
+        async function loadClothesItem(id) {
+            try {
+                log(`加载服装项，ID: ${id}`);
+                const token = localStorage.getItem('token');
+                
+                if (!token) {
+                    throw new Error('未登录，无法加载数据');
+                }
+                
+                const response = await fetch(`http://127.0.0.1:8000/api/v1/clothes/${id}/`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('加载数据失败');
+                }
+                
+                const data = await response.json();
+                log('服装数据加载成功:', data);
+                
+                // 填充表单
+                document.getElementById('clothesName').value = data.name || '';
+                document.getElementById('category').value = data.category || '';
+                document.getElementById('subCategory').value = data.subcategory || '';
+                document.getElementById('color').value = data.color || '';
+                document.getElementById('season').value = data.season || '';
+                document.getElementById('brand').value = data.brand || '';
+                document.getElementById('description').value = data.description || '';
+                document.getElementById('isFavorite').checked = data.is_favorite || false;
+                
+                // 显示图片
+                if (data.image_url) {
+                    imageUrl = data.image_url;
+                    imagePreview.src = data.image_url;
+                    imagePreview.style.display = 'block';
+                    imageUploaded = true;
+                }
+                
+                // 启用保存按钮
+                saveBtn.disabled = false;
+                
+            } catch (error) {
+                console.error('加载服装数据错误:', error);
+                alert(`加载服装数据失败: ${error.message}`);
+            }
+        }
+        
+        // 保存服装信息
+        clothesForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (!this.checkValidity()) {
+                e.stopPropagation();
+                this.classList.add('was-validated');
+                return;
             }
             
-            // 表单提交处理
-            clothesForm.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                
-                if (!uploadResult) {
-                    alert('请先上传图片');
-                    return;
-                }
-                
-                // 表单验证
-                if (!this.checkValidity()) {
-                    e.stopPropagation();
-                    this.classList.add('was-validated');
-                    return;
-                }
-                
+            if (!imageUploaded && !editMode) {
+                alert('请先上传图片');
+                return;
+            }
+            
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 保存中...';
+            
+            try {
                 // 收集表单数据
                 const clothesData = {
                     name: document.getElementById('clothesName').value,
                     category: document.getElementById('category').value,
-                    sub_category: document.getElementById('subCategory').value || null,
-                    color: document.getElementById('color').value || null,
-                    season: document.getElementById('season').value || null,
-                    brand: document.getElementById('brand').value || null,
-                    description: document.getElementById('description').value || null,
+                    subcategory: document.getElementById('subCategory').value || undefined,
+                    color: document.getElementById('color').value || undefined,
+                    season: document.getElementById('season').value || undefined,
+                    brand: document.getElementById('brand').value || undefined,
+                    description: document.getElementById('description').value || undefined,
                     is_favorite: document.getElementById('isFavorite').checked,
-                    // 图片URL，从上传结果中获取
-                    image_url: uploadResult.image_url
                 };
                 
-                // 保存服装信息
-                saveBtn.disabled = true;
-                saveBtn.textContent = '保存中...';
-                
-                try {
-                    const response = await fetch('http://127.0.0.1:8000/api/v1/clothes/', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${window.Auth.getToken()}`
-                        },
-                        body: JSON.stringify(clothesData)
-                    });
-                    
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(errorData.detail || '保存失败');
-                    }
-                    
-                    const savedClothes = await response.json();
-                    alert('服装信息保存成功');
-                    
-                    // 重置表单
-                    clothesForm.reset();
-                    document.getElementById('imagePreview').style.display = 'none';
-                    uploadBtn.disabled = true;
-                    saveBtn.disabled = true;
-                    saveBtn.textContent = '保存服装信息';
-                    uploadResult = null;
-                    
-                    // 移除识别状态提示
-                    const statusAlert = document.getElementById('recognitionStatus');
-                    if (statusAlert) {
-                        statusAlert.remove();
-                    }
-                    
-                    // 可选：跳转到衣橱页面
-                    window.location.href = 'closet.html';
-                    
-                } catch (error) {
-                    console.error('保存失败:', error);
-                    alert('保存失败: ' + error.message);
-                    saveBtn.disabled = false;
-                    saveBtn.textContent = '保存服装信息';
+                if (imageUrl) {
+                    clothesData.image_url = imageUrl;
                 }
-            });
-            
-            // 退出登录处理
-            document.getElementById('logoutLink').addEventListener('click', function(e) {
-                e.preventDefault();
-                window.Auth.logout();
-                window.location.href = 'login.html';
-            });
+                
+                log('准备保存服装数据:', clothesData);
+                
+                // 获取认证令牌
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    throw new Error('未登录，无法保存');
+                }
+                
+                // 设置请求URL和方法
+                let url = 'http://127.0.0.1:8000/api/v1/clothes/';
+                let method = 'POST';
+                
+                if (editMode && editItemId) {
+                    url = `http://127.0.0.1:8000/api/v1/clothes/${editItemId}/`;
+                    method = 'PUT';
+                }
+                
+                // 发送请求
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(clothesData)
+                });
+                
+                log(`保存响应状态: ${response.status}`);
+                
+                if (response.status === 401) {
+                    alert('登录已过期，请重新登录');
+                    localStorage.removeItem('token');
+                    localStorage.setItem('redirectAfterLogin', window.location.href);
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || '保存失败');
+                }
+                
+                // 保存成功，重定向到衣橱页面
+                alert('保存成功');
+                window.location.href = 'closet.html';
+                
+            } catch (error) {
+                console.error('保存服装数据错误:', error);
+                saveBtn.innerHTML = '保存';
+                saveBtn.disabled = false;
+                alert(`保存失败: ${error.message}`);
+            }
         });
     </script>
 </body>

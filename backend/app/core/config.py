@@ -13,7 +13,13 @@ class Settings(BaseSettings):
     # 访问令牌有效期（分钟）
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8  # 8 天
     # BACKEND_CORS_ORIGINS是一个JSON格式的字符串列表，例如：'["http://localhost", "http://localhost:4200"]'
-    BACKEND_CORS_ORIGINS: List[Union[AnyHttpUrl, str]] = []
+    BACKEND_CORS_ORIGINS: List[Union[AnyHttpUrl, str]] = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+        "*"  # 开发环境下允许所有来源
+    ]
     
     # 应用配置
     ENVIRONMENT: str = "development"

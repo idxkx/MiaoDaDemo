@@ -37,192 +37,100 @@
     <div class="container mt-5">
         <h1 class="mb-4">穿搭推荐</h1>
 
-        <!-- 选项卡导航 -->
-        <ul class="nav nav-tabs mb-4" id="recommendTabs" role="tablist">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="auto-tab" data-bs-toggle="tab" data-bs-target="#auto" type="button" role="tab">智能推荐</button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="occasion-tab" data-bs-toggle="tab" data-bs-target="#occasion" type="button" role="tab">场合穿搭</button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="weather-tab" data-bs-toggle="tab" data-bs-target="#weather" type="button" role="tab">天气穿搭</button>
-            </li>
-        </ul>
-
-        <!-- 选项卡内容 -->
-        <div class="tab-content" id="recommendTabsContent">
-            <!-- 智能推荐选项卡 -->
-            <div class="tab-pane fade show active" id="auto" role="tabpanel" aria-labelledby="auto-tab">
-                <div class="row mb-4">
-                    <div class="col-md-6">
-                        <p>基于您的服装收藏和偏好，我们为您推荐以下搭配：</p>
-                    </div>
-                    <div class="col-md-6 text-md-end">
-                        <button class="btn btn-outline-primary" id="refreshRecommend">
-                            <i class="bi bi-arrow-repeat"></i> 刷新推荐
-                        </button>
-                    </div>
-                </div>
-
-                <!-- 推荐卡片 -->
-                <div class="row g-4" id="auto-recommendations">
-                    <!-- 推荐搭配1 -->
-                    <div class="col-lg-4 col-md-6">
-                        <div class="card h-100">
-                            <div class="card-header">
-                                <h5 class="card-title mb-0">日常休闲搭配</h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="outfit-preview mb-3">
-                                    <img src="assets/images/outfit1.jpg" class="img-fluid rounded" alt="休闲搭配">
-                                </div>
-                                <h6>包含物品：</h6>
-                                <ul class="list-group mb-3">
-                                    <li class="list-group-item d-flex align-items-center">
-                                        <img src="assets/images/placeholder-shirt.jpg" class="outfit-item-thumb me-2" alt="白色衬衫">
-                                        白色衬衫
-                                    </li>
-                                    <li class="list-group-item d-flex align-items-center">
-                                        <img src="assets/images/placeholder-jeans.jpg" class="outfit-item-thumb me-2" alt="蓝色牛仔裤">
-                                        蓝色牛仔裤
-                                    </li>
-                                    <li class="list-group-item d-flex align-items-center">
-                                        <img src="assets/images/placeholder-shoes.jpg" class="outfit-item-thumb me-2" alt="休闲鞋">
-                                        白色休闲鞋
-                                    </li>
-                                </ul>
-                                <div class="d-grid">
-                                    <button class="btn btn-primary">保存搭配</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 推荐搭配2 -->
-                    <div class="col-lg-4 col-md-6">
-                        <div class="card h-100">
-                            <div class="card-header">
-                                <h5 class="card-title mb-0">商务简约搭配</h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="outfit-preview mb-3">
-                                    <img src="assets/images/outfit2.jpg" class="img-fluid rounded" alt="商务搭配">
-                                </div>
-                                <h6>包含物品：</h6>
-                                <ul class="list-group mb-3">
-                                    <li class="list-group-item d-flex align-items-center">
-                                        <img src="assets/images/placeholder-jacket.jpg" class="outfit-item-thumb me-2" alt="黑色夹克">
-                                        黑色夹克
-                                    </li>
-                                    <li class="list-group-item d-flex align-items-center">
-                                        <img src="assets/images/placeholder-shirt.jpg" class="outfit-item-thumb me-2" alt="白色衬衫">
-                                        白色衬衫
-                                    </li>
-                                    <li class="list-group-item d-flex align-items-center">
-                                        <img src="assets/images/placeholder-pants.jpg" class="outfit-item-thumb me-2" alt="黑色裤子">
-                                        黑色休闲裤
-                                    </li>
-                                </ul>
-                                <div class="d-grid">
-                                    <button class="btn btn-primary">保存搭配</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 推荐搭配3 -->
-                    <div class="col-lg-4 col-md-6">
-                        <div class="card h-100">
-                            <div class="card-header">
-                                <h5 class="card-title mb-0">周末活力搭配</h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="outfit-preview mb-3">
-                                    <img src="assets/images/outfit3.jpg" class="img-fluid rounded" alt="活力搭配">
-                                </div>
-                                <h6>包含物品：</h6>
-                                <ul class="list-group mb-3">
-                                    <li class="list-group-item d-flex align-items-center">
-                                        <img src="assets/images/placeholder-tshirt.jpg" class="outfit-item-thumb me-2" alt="T恤">
-                                        图案T恤
-                                    </li>
-                                    <li class="list-group-item d-flex align-items-center">
-                                        <img src="assets/images/placeholder-shorts.jpg" class="outfit-item-thumb me-2" alt="短裤">
-                                        休闲短裤
-                                    </li>
-                                    <li class="list-group-item d-flex align-items-center">
-                                        <img src="assets/images/placeholder-sneakers.jpg" class="outfit-item-thumb me-2" alt="运动鞋">
-                                        运动鞋
-                                    </li>
-                                </ul>
-                                <div class="d-grid">
-                                    <button class="btn btn-primary">保存搭配</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 场合穿搭选项卡 -->
-            <div class="tab-pane fade" id="occasion" role="tabpanel" aria-labelledby="occasion-tab">
-                <div class="card mb-4">
+        <div class="row">
+            <div class="col-lg-4 mb-4">
+                <div class="card">
                     <div class="card-body">
-                        <h5 class="card-title mb-3">选择场合</h5>
-                        <div class="row">
-                            <div class="col-md-8">
-                                <select class="form-select" id="occasion-select">
+                        <h5 class="card-title mb-3">推荐条件</h5>
+                        <form id="recommend-form">
+                            <div class="mb-3">
+                                <label for="occasion" class="form-label">场合</label>
+                                <select class="form-select" id="occasion" name="occasion" required>
+                                    <option value="">请选择场合</option>
                                     <option value="casual">日常休闲</option>
-                                    <option value="work">工作正式</option>
+                                    <option value="work">工作</option>
                                     <option value="date">约会</option>
-                                    <option value="party">派对</option>
-                                    <option value="sport">运动健身</option>
-                                    <option value="travel">旅行度假</option>
+                                    <option value="party">聚会</option>
+                                    <option value="formal">正式场合</option>
+                                    <option value="travel">旅行</option>
                                 </select>
                             </div>
-                            <div class="col-md-4">
-                                <button class="btn btn-primary w-100" id="generate-occasion">生成搭配</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
-                <div id="occasion-recommendations">
-                    <div class="text-center py-5">
-                        <i class="bi bi-arrow-up-circle fs-1 text-muted"></i>
-                        <p class="mt-3">请选择场合并点击生成搭配</p>
+                            <div class="mb-3">
+                                <label for="season" class="form-label">季节</label>
+                                <select class="form-select" id="season" name="season" required>
+                                    <option value="">请选择季节</option>
+                                    <option value="spring">春季</option>
+                                    <option value="summer">夏季</option>
+                                    <option value="autumn">秋季</option>
+                                    <option value="winter">冬季</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="style" class="form-label">风格偏好</label>
+                                <select class="form-select" id="style" name="style">
+                                    <option value="">不限风格</option>
+                                    <option value="minimalist">极简风格</option>
+                                    <option value="classic">经典风格</option>
+                                    <option value="streetwear">街头风格</option>
+                                    <option value="sporty">运动风格</option>
+                                    <option value="retro">复古风格</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="weather-check" name="consider_weather">
+                                    <label class="form-check-label" for="weather-check">
+                                        考虑当前天气
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">获取推荐</button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
 
-            <!-- 天气穿搭选项卡 -->
-            <div class="tab-pane fade" id="weather" role="tabpanel" aria-labelledby="weather-tab">
-                <div class="card mb-4">
-                    <div class="card-body">
-                        <h5 class="card-title mb-3">今日天气</h5>
-                        <div class="row align-items-center">
-                            <div class="col-md-6">
-                                <div class="d-flex align-items-center">
-                                    <i class="bi bi-cloud-sun fs-1 me-3"></i>
-                                    <div>
-                                        <h3 class="mb-0">25°C</h3>
-                                        <p class="mb-0">晴朗，微风</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6 text-md-end">
-                                <button class="btn btn-primary" id="generate-weather">根据天气推荐</button>
-                            </div>
+            <div class="col-lg-8">
+                <div id="recommendation-loading" class="text-center p-5 d-none">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">加载中...</span>
+                    </div>
+                    <p class="mt-3">正在分析您的衣橱并生成穿搭建议...</p>
+                </div>
+
+                <div id="recommendation-empty" class="text-center p-5">
+                    <i class="bi bi-search display-1 text-muted"></i>
+                    <h3 class="mt-3">请选择条件获取穿搭推荐</h3>
+                    <p class="text-muted">我们会基于您的衣橱内容和选择的条件生成合适的穿搭方案</p>
+                </div>
+
+                <div id="recommendation-results" class="d-none">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">推荐穿搭</h5>
+                            <div id="outfit-description" class="mb-3 p-3 bg-light rounded"></div>
+                            <div class="row" id="outfit-items"></div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">穿搭建议</h5>
+                            <div id="styling-tips" class="mb-3"></div>
                         </div>
                     </div>
                 </div>
 
-                <div id="weather-recommendations">
-                    <div class="text-center py-5">
-                        <i class="bi bi-cloud-arrow-down fs-1 text-muted"></i>
-                        <p class="mt-3">点击按钮获取基于今日天气的搭配推荐</p>
-                    </div>
+                <div id="recommendation-error" class="text-center p-5 d-none">
+                    <i class="bi bi-exclamation-circle display-1 text-danger"></i>
+                    <h3 class="mt-3">无法生成推荐</h3>
+                    <p id="error-message" class="text-muted">请确保您的衣橱中有足够的衣物，并重试。</p>
                 </div>
             </div>
         </div>

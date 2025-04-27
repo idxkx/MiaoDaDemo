@@ -237,8 +237,12 @@
                     // 调用登录API
                     await window.Auth.login(username, password);
                     
-                    // 登录成功，跳转到首页
-                    window.location.href = 'index.html';
+                    // 登录成功，检查是否有需要重定向的页面
+                    const redirectUrl = localStorage.getItem('redirectAfterLogin') || 'index.html';
+                    // 清除重定向信息
+                    localStorage.removeItem('redirectAfterLogin');
+                    // 跳转到之前的页面或首页
+                    window.location.href = redirectUrl;
                 } catch (error) {
                     // 显示错误信息
                     loginError.textContent = error.message || '登录失败，请检查用户名和密码';
@@ -305,8 +309,12 @@
                     // 注册成功，自动登录
                     await window.Auth.login(userData.username, userData.password);
                     
-                    // 跳转到首页
-                    window.location.href = 'index.html';
+                    // 检查是否有需要重定向的页面
+                    const redirectUrl = localStorage.getItem('redirectAfterLogin') || 'index.html';
+                    // 清除重定向信息
+                    localStorage.removeItem('redirectAfterLogin');
+                    // 跳转到之前的页面或首页
+                    window.location.href = redirectUrl;
                 } catch (error) {
                     // 显示错误信息
                     registerError.textContent = error.message || '注册失败，请稍后重试';
