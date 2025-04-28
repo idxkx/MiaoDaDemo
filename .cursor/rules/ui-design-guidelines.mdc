@@ -5,9 +5,44 @@ alwaysApply: false
 ---
 {
   "type": "agent_requested",
-  "title": "UI设计与用户体验指南",
-  "description": "UI设计和用户体验的关键规范和约定"
+  "title": "UI设计指南",
+  "description": "本文档定义了项目的用户界面设计规范、组件库使用指南和交互设计原则，确保用户界面的一致性和良好的用户体验。",
+  "version": "1.0.0",
+  "author": "MiaoDao Team",
+  "categories": [
+    "frontend",
+    "design",
+    "ui-ux"
+  ],
+  "tags": [
+    "components",
+    "layout",
+    "styling",
+    "interaction",
+    "accessibility"
+  ],
+  "scope": {
+    "includes": [
+      "frontend/**/*.html",
+      "frontend/**/*.css",
+      "frontend/**/*.js",
+      "frontend/**/*.jsx",
+      "frontend/**/*.ts",
+      "frontend/**/*.tsx"
+    ],
+    "excludes": [
+      "node_modules/**",
+      "dist/**",
+      "build/**"
+    ]
+  },
+  "priority": "high",
+  "lastUpdated": "2024-03-13"
 }
+
+<!-- UI Design Guidelines -->
+
+<!-- Standards and guidelines for user interface design -->
 
 # UI设计与用户体验指南
 

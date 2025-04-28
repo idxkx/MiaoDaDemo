@@ -5,9 +5,43 @@ alwaysApply: false
 ---
 {
   "type": "agent_requested",
-  "title": "部署与环境配置指南",
-  "description": "项目部署与环境配置的关键规范和约定"
+  "title": "部署指南",
+  "description": "本文档定义了项目的部署流程、环境配置和运维规范，确保系统部署的可靠性和可维护性。",
+  "version": "1.0.0",
+  "author": "MiaoDao Team",
+  "categories": [
+    "deployment",
+    "operations",
+    "infrastructure"
+  ],
+  "tags": [
+    "docker",
+    "environment",
+    "configuration",
+    "monitoring",
+    "security"
+  ],
+  "scope": {
+    "includes": [
+      "docker-compose.yml",
+      "Dockerfile",
+      ".env*",
+      "deployment/**/*",
+      "scripts/**/*.sh"
+    ],
+    "excludes": [
+      "node_modules/**",
+      "**/__pycache__/**",
+      "*.log"
+    ]
+  },
+  "priority": "high",
+  "lastUpdated": "2024-03-13"
 }
+
+<!-- Deployment Guidelines -->
+
+<!-- Standards and guidelines for system deployment -->
 
 # 部署与环境配置指南
 

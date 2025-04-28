@@ -6,8 +6,40 @@ alwaysApply: false
 {
   "type": "agent_requested",
   "title": "AI模型集成规范",
-  "description": "AI模型集成的关键规范和约定"
+  "description": "本文档定义了项目中AI模型集成的标准流程、接口规范和最佳实践，确保AI功能的可靠性、性能和可维护性。",
+  "version": "1.0.0",
+  "author": "MiaoDao Team",
+  "categories": [
+    "ai",
+    "integration",
+    "backend"
+  ],
+  "tags": [
+    "machine-learning",
+    "model-serving",
+    "inference",
+    "performance",
+    "monitoring"
+  ],
+  "scope": {
+    "includes": [
+      "backend/app/services/ai/**/*.py",
+      "backend/app/models/**/*.py",
+      "models/**/*.py"
+    ],
+    "excludes": [
+      "**/__pycache__/**",
+      "**/tests/**",
+      "**/temp/**"
+    ]
+  },
+  "priority": "high",
+  "lastUpdated": "2024-03-13"
 }
+
+<!-- AI Models Integration -->
+
+<!-- Standards and guidelines for AI model integration -->
 
 # AI模型集成规范
 

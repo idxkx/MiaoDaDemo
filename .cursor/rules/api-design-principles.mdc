@@ -5,8 +5,34 @@ alwaysApply: false
 ---
 {
   "type": "agent_requested",
-  "title": "API设计规范",
-  "description": "后端API设计的关键规范和约定"
+  "title": "API设计原则",
+  "description": "本文档定义了项目中API设计的核心原则、最佳实践和规范指南，确保API的一致性、可用性和可维护性。",
+  "version": "1.0.0",
+  "author": "MiaoDao Team",
+  "categories": [
+    "api",
+    "design",
+    "backend"
+  ],
+  "tags": [
+    "fastapi",
+    "rest-api",
+    "endpoints",
+    "documentation",
+    "security"
+  ],
+  "scope": {
+    "includes": [
+      "backend/app/api/**/*.py",
+      "backend/app/schemas/**/*.py"
+    ],
+    "excludes": [
+      "**/__pycache__/**",
+      "**/tests/**"
+    ]
+  },
+  "priority": "high",
+  "lastUpdated": "2024-03-13"
 }
 
 # API设计规范

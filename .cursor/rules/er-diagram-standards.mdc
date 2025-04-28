@@ -4,7 +4,7 @@ globs:
 alwaysApply: false
 ---
 {
-  "type": "design_rules",
+  "type": "agent_requested",
   "title": "ER图表设计规范",
   "description": "本文档定义了项目中实体关系图(ER Diagram)的设计标准、视觉规范、功能要求和技术实现规范，确保ER图表的一致性、可用性和可维护性。",
   "version": "1.0.0",

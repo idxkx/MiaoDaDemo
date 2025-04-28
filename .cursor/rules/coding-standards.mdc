@@ -5,9 +5,44 @@ alwaysApply: false
 ---
 {
   "type": "agent_requested",
-  "title": "编码规范与开发标准",
-  "description": "项目代码开发的关键规范和约定"
+  "title": "代码开发规范",
+  "description": "本文档定义了项目的代码开发规范、编码风格指南和最佳实践，确保代码质量和一致性。",
+  "version": "1.0.0",
+  "author": "MiaoDao Team",
+  "categories": [
+    "development",
+    "coding",
+    "standards"
+  ],
+  "tags": [
+    "python",
+    "javascript",
+    "typescript",
+    "style-guide",
+    "best-practices"
+  ],
+  "scope": {
+    "includes": [
+      "**/*.py",
+      "**/*.js",
+      "**/*.ts",
+      "**/*.jsx",
+      "**/*.tsx"
+    ],
+    "excludes": [
+      "node_modules/**",
+      "**/__pycache__/**",
+      "dist/**",
+      "build/**"
+    ]
+  },
+  "priority": "high",
+  "lastUpdated": "2024-03-13"
 }
+
+<!-- Coding Standards -->
+
+<!-- Standards and guidelines for code development -->
 
 # 编码规范与开发标准
 

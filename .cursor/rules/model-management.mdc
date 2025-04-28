@@ -6,7 +6,35 @@ alwaysApply: false
 {
   "type": "agent_requested",
   "title": "模型管理规范",
-  "description": "AI模型加载、管理与切换的规范和约定"
+  "description": "本文档定义了项目中AI模型的加载、管理、切换和版本控制的标准流程和最佳实践，确保模型管理的规范性和可靠性。",
+  "version": "1.0.0",
+  "author": "MiaoDao Team",
+  "categories": [
+    "ai",
+    "model-management",
+    "operations"
+  ],
+  "tags": [
+    "model-versioning",
+    "model-loading",
+    "model-switching",
+    "performance",
+    "monitoring"
+  ],
+  "scope": {
+    "includes": [
+      "backend/app/services/model/**/*.py",
+      "models/**/*",
+      "tools/model_tools/**/*.py"
+    ],
+    "excludes": [
+      "**/__pycache__/**",
+      "**/tests/**",
+      "**/temp/**"
+    ]
+  },
+  "priority": "high",
+  "lastUpdated": "2024-03-13"
 }
 
 # 模型管理规范
