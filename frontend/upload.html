@@ -226,6 +226,14 @@
         
         // 检查是否是编辑模式
         document.addEventListener('DOMContentLoaded', function() {
+            // 检查是否已选择角色
+            const currentPersonaId = localStorage.getItem('currentPersonaId');
+            if (!currentPersonaId) {
+                log('未选择角色，跳转到首页');
+                window.location.href = 'index.html';
+                return;
+            }
+            
             const params = new URLSearchParams(window.location.search);
             const editId = params.get('edit');
             
@@ -236,32 +244,7 @@
                 loadClothesItem(editId);
                 document.querySelector('h1').textContent = '编辑服装';
             }
-            
-            // 检查是否已登录
-            updateAuthUI();
         });
-        
-        // 更新认证UI
-        function updateAuthUI() {
-            const TOKEN_KEY = 'token'; // 重要：与auth.js保持一致
-            const token = localStorage.getItem(TOKEN_KEY);
-            
-            log(`认证状态检查，令牌存在: ${!!token}`);
-            
-            if (token) {
-                document.getElementById('loginItem').classList.add('d-none');
-                document.getElementById('userProfileItem').classList.remove('d-none');
-                document.getElementById('logoutItem').classList.remove('d-none');
-                
-                // 添加登出事件
-                document.getElementById('logoutLink').addEventListener('click', function(e) {
-                    e.preventDefault();
-                    localStorage.removeItem(TOKEN_KEY);
-                    localStorage.removeItem('user_data');
-                    window.location.href = 'index.html';
-                });
-            }
-        }
         
         // 文件选择事件
         fileInput.addEventListener('change', function(e) {
@@ -319,13 +302,6 @@
                 return;
             }
             
-            if (!isUserLoggedIn()) {
-                alert('请先登录');
-                localStorage.setItem('redirectAfterLogin', window.location.href);
-                window.location.href = 'login.html';
-                return;
-            }
-            
             uploadImage(selectedFile);
         });
         
@@ -348,6 +324,7 @@
                 
                 log(`使用认证令牌: ${token.substring(0, 10)}...`);
                 
+                // 修复API路径，确保以斜杠结尾
                 const response = await fetch('http://127.0.0.1:8000/api/v1/clothes/upload-image/', {
                     method: 'POST',
                     headers: {
@@ -367,7 +344,7 @@
                 }
                 
                 if (!response.ok) {
-                    const errorData = await response.json();
+                    const errorData = await response.json().catch(() => ({ detail: '上传失败，服务器错误' }));
                     throw new Error(errorData.detail || '上传失败');
                 }
                 
@@ -401,58 +378,42 @@
             }
         }
         
-        // 判断用户是否已登录
-        function isUserLoggedIn() {
-            return !!localStorage.getItem('token');
-        }
-        
-        // 加载服装项
+        // 加载服装信息
         async function loadClothesItem(id) {
             try {
-                log(`加载服装项，ID: ${id}`);
-                const token = localStorage.getItem('token');
-                
-                if (!token) {
-                    throw new Error('未登录，无法加载数据');
-                }
-                
-                const response = await fetch(`http://127.0.0.1:8000/api/v1/clothes/${id}/`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
+                // 添加persona_id参数
+                const personaId = localStorage.getItem('currentPersonaId');
+                const response = await fetch(`${API_BASE_URL}/clothes/${id}?persona_id=${personaId}`);
                 
                 if (!response.ok) {
-                    throw new Error('加载数据失败');
+                    throw new Error('加载服装信息失败');
                 }
                 
-                const data = await response.json();
-                log('服装数据加载成功:', data);
+                const item = await response.json();
                 
                 // 填充表单
-                document.getElementById('clothesName').value = data.name || '';
-                document.getElementById('category').value = data.category || '';
-                document.getElementById('subCategory').value = data.subcategory || '';
-                document.getElementById('color').value = data.color || '';
-                document.getElementById('season').value = data.season || '';
-                document.getElementById('brand').value = data.brand || '';
-                document.getElementById('description').value = data.description || '';
-                document.getElementById('isFavorite').checked = data.is_favorite || false;
+                document.getElementById('clothesName').value = item.name || '';
+                document.getElementById('category').value = item.category || '';
+                document.getElementById('subCategory').value = item.sub_category || '';
+                document.getElementById('color').value = item.color || '';
+                document.getElementById('season').value = item.season || '';
+                document.getElementById('brand').value = item.brand || '';
+                document.getElementById('description').value = item.description || '';
+                document.getElementById('isFavorite').checked = item.is_favorite || false;
                 
-                // 显示图片
-                if (data.image_url) {
-                    imageUrl = data.image_url;
-                    imagePreview.src = data.image_url;
+                // 如果有图片，显示预览
+                if (item.image_url) {
+                    imagePreview.src = item.image_url;
                     imagePreview.style.display = 'block';
+                    imageUrl = item.image_url;
                     imageUploaded = true;
+                    saveBtn.disabled = false;
                 }
                 
-                // 启用保存按钮
-                saveBtn.disabled = false;
-                
+                log('服装信息加载成功');
             } catch (error) {
-                console.error('加载服装数据错误:', error);
-                alert(`加载服装数据失败: ${error.message}`);
+                console.error('服装信息加载失败:', error);
+                alert('无法加载服装信息，请重试');
             }
         }
         
@@ -499,7 +460,7 @@
                     throw new Error('未登录，无法保存');
                 }
                 
-                // 设置请求URL和方法
+                // 设置请求URL和方法，确保以斜杠结尾
                 let url = 'http://127.0.0.1:8000/api/v1/clothes/';
                 let method = 'POST';
                 
@@ -529,7 +490,7 @@
                 }
                 
                 if (!response.ok) {
-                    const errorData = await response.json();
+                    const errorData = await response.json().catch(() => ({ detail: '保存失败，服务器错误' }));
                     throw new Error(errorData.detail || '保存失败');
                 }
                 

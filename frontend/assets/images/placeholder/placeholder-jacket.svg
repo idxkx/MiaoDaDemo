@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <rect width="100%" height="100%" fill="#f0f0f0"/>
+  <path d="M65,40 L50,60 L45,180 L90,160 L100,170 L110,160 L155,180 L150,60 L135,40 Z" fill="#8c6239" stroke="#3a3a3a" stroke-width="2"/>
+  <path d="M65,40 L80,60 L100,60 L120,60 L135,40" stroke="#3a3a3a" stroke-width="2" fill="none"/>
+  <path d="M80,60 L85,170 M120,60 L115,170" stroke="#3a3a3a" stroke-width="1.5" fill="none"/>
+  <path d="M90,80 L110,80 M90,90 L110,90 M90,100 L110,100" stroke="#3a3a3a" stroke-width="1.5" fill="none"/>
+  <path d="M45,100 L55,95 M145,100 L155,95" stroke="#3a3a3a" stroke-width="1.5" fill="none"/>
+  <text x="100" y="140" font-family="Arial" font-size="16" text-anchor="middle" fill="#333">夹克</text>
+</svg> 

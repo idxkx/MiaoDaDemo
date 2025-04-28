@@ -20,4 +20,4 @@ rich==13.7.0
 sqlalchemy-schemadisplay==1.3
 pydot==1.4.2
 graphviz==0.20.1
-eralchemy2==1.3.6 
+# eralchemy2==1.3.6  # 需要pygraphviz，临时注释掉 

@@ -1,306 +1,143 @@
 # 智能穿搭助手
 
-智能穿搭助手是一个结合AI技术的服装管理与穿搭推荐系统，帮助用户管理个人衣橱并获取个性化的穿搭建议。
+一个基于AI的智能穿搭推荐系统，帮助用户管理衣橱并获得个性化的穿搭建议。
 
-## 项目概述
+## 功能特点
 
-本项目采用前后端分离的架构，包含以下主要组件：
-
-- **前端**：基于HTML/CSS/JavaScript和Bootstrap 5构建的简洁易用的Web界面
-- **后端**：基于FastAPI构建的Python REST API
-- **AI模型**：用于服装识别和穿搭推荐的机器学习模型
-
-## 核心功能
-
-### 1. 角色管理
-- 快速角色切换（无需登录/注册）
-- 预设6个虚拟角色（3男3女）
-- 每个角色拥有独立衣橱和穿搭偏好
-
-### 2. 服装管理
-- 上传和存储服装图片
-- 服装分类和标签管理
-- 个人衣橱浏览和筛选
-
-### 3. AI服装识别
-- 上传图片自动识别服装类型
-- 提取服装特征（颜色、风格等）
-
-### 4. 穿搭推荐
-- 基于场合的穿搭推荐
-- 基于季节和天气的穿搭建议
-- 个性化风格匹配
-
-## 虚拟角色档案
-
-### 男性角色
-
-#### 小明（25岁，程序员）
-- **身材特征**：178cm，65kg，偏瘦
-- **穿搭风格**：简约科技风，偏爱深色系
-- **偏好场合**：办公室、技术交流会
-- **季节适应**：不太耐热，偏爱春秋季节
-
-#### 大卫（32岁，市场经理）
-- **身材特征**：185cm，78kg，运动型身材
-- **穿搭风格**：商务休闲，注重细节
-- **偏好场合**：商务会议、社交活动
-- **季节适应**：四季均衡，善于层次搭配
-
-#### 老王（45岁，教授）
-- **身材特征**：175cm，80kg，略微发福
-- **穿搭风格**：学院风，经典保守
-- **偏好场合**：学术会议、课堂授课
-- **季节适应**：怕冷，偏爱保暖舒适
-
-### 女性角色
-
-#### 小红（22岁，大学生）
-- **身材特征**：163cm，48kg，纤细
-- **穿搭风格**：青春活力，喜欢尝试流行元素
-- **偏好场合**：校园、休闲约会
-- **季节适应**：喜欢春夏季节，色彩鲜艳
-
-#### 丽丽（28岁，设计师）
-- **身材特征**：170cm，55kg，高挑
-- **穿搭风格**：艺术气息，个性化强
-- **偏好场合**：艺术展览、创意工作室
-- **季节适应**：善于配饰，四季皆宜
-
-#### 张阿姨（50岁，主妇）
-- **身材特征**：160cm，62kg，温婉体型
-- **穿搭风格**：优雅得体，注重质感
-- **偏好场合**：家庭聚会、社区活动
-- **季节适应**：注重保暖与舒适，偏爱秋冬季节
-
-## 技术栈
-
-### 前端
-- HTML5 / CSS3 / JavaScript
-- Bootstrap 5
-- 原生Fetch API
-
-### 后端
-- Python 3.9+
-- FastAPI
-- SQLAlchemy ORM
-- 简单令牌认证（用于角色识别）
-
-### AI模型
-- PyTorch
-- ResNet预训练模型
+- 🎭 角色系统：支持多个预设角色，每个角色都有独特的穿搭偏好和风格
+- 📸 服装识别：自动识别上传服装的类型、颜色和风格
+- 👔 衣橱管理：便捷的服装收藏和管理功能
+- 🎨 穿搭推荐：基于场景和个人特征的智能穿搭建议
+- 🖼️ 效果预览：生成穿搭效果图（开发中）
 
 ## 快速开始
 
 ### 环境要求
-- Python 3.9+
-- 现代浏览器（Chrome、Firefox、Edge等）
 
-### 安装使用
-1. 克隆此仓库到本地
-2. 使用提供的启动脚本一键启动应用
-3. 在浏览器中访问前端界面
-4. 选择一个虚拟角色进行体验
-
-## 使用指南
-
-### 1. 上传服装
-1. 选择角色后，点击"添加服装"按钮
-2. 上传服装图片
-3. 填写或确认由AI识别的服装信息（类型、颜色等）
-4. 点击保存，将服装添加到个人衣橱
-
-### 2. 浏览衣橱
-1. 点击导航栏中的"我的衣橱"
-2. 使用分类、颜色、季节筛选器查找特定服装
-3. 可以编辑或删除已添加的服装
-
-### 3. 获取穿搭推荐
-1. 点击导航栏中的"穿搭推荐"
-2. 选择场合、季节等条件
-3. 系统将基于当前角色衣橱中的服装提供穿搭组合建议
-
-## 注意事项
-- 本应用为轻量级设计，注重简洁实用
-- 无需注册账号，通过角色切换体验不同用户场景
-- 每个角色的衣橱数据相互独立
-
-## 项目目录结构
-
-```
-MiaoDaDemo
-├── backend/             # 后端API服务
-│   ├── app/             # 应用核心代码
-│   │   ├── api/         # API端点
-│   │   ├── core/        # 核心配置
-│   │   ├── crud/        # 数据库操作
-│   │   ├── db/          # 数据库模型
-│   │   ├── models/      # 数据模型
-│   │   ├── schemas/     # Pydantic模式
-│   │   ├── services/    # 业务逻辑服务
-│   │   └── utils/       # 工具函数
-│   ├── storage/         # 文件存储
-│   └── tests/           # 单元测试
-├── frontend/            # 前端应用
-│   ├── assets/          # 静态资源
-│   ├── css/             # 样式文件
-│   ├── js/              # JavaScript文件
-│   └── *.html           # HTML页面
-└── models/              # AI模型
-    ├── MD_resnet50.../  # 预训练模型
-    └── my_clothes.../   # 自定义模型
-```
-
-## API接口说明
-
-### 认证API
-- `POST /api/v1/auth/login`：用户登录，返回JWT令牌
-- `POST /api/v1/auth/register`：用户注册
-
-### 用户API
-- `GET /api/v1/users/me`：获取当前用户信息
-- `PUT /api/v1/users/me`：更新当前用户信息
-
-### 服装API
-- `GET /api/v1/clothes`：获取当前用户的所有服装
-- `POST /api/v1/clothes`：添加新服装
-- `GET /api/v1/clothes/{id}`：获取特定服装详情
-- `PUT /api/v1/clothes/{id}`：更新服装信息
-- `DELETE /api/v1/clothes/{id}`：删除服装
-- `POST /api/v1/clothes/upload-image`：上传服装图片
-
-### 识别API
-- `POST /api/v1/recognition`：识别服装类型和特征
-
-### 推荐API
-- `POST /api/v1/recommendation`：获取穿搭推荐
-
-## 项目结构
-
-```
-MiaoDaDemo/
-├── backend/               # 后端API服务
-│   ├── app/               # 应用核心代码
-│   │   ├── api/           # API路由
-│   │   ├── core/          # 配置、核心逻辑
-│   │   ├── db/            # 数据库会话、操作
-│   │   ├── models/        # 数据模型
-│   │   ├── schemas/       # 数据校验模型
-│   │   ├── services/      # 业务逻辑
-│   │   └── utils/         # 工具函数
-│   ├── storage/           # 文件存储目录
-│   │   ├── images/        # 图片存储
-│   │   └── temp/          # 临时文件
-│   └── tests/             # 测试代码
-├── frontend/              # Web前端
-│   ├── css/               # 样式文件
-│   ├── js/                # JavaScript文件
-│   ├── assets/            # 静态资源
-│   └── *.html             # HTML页面
-├── models/                # AI模型文件
-└── tools/                 # 开发工具脚本
-```
-
-## 主要功能
-
-1. **用户认证**: 简单的用户名/密码认证
-2. **服装识别**: 上传图片识别服装类型、颜色等属性
-3. **衣橱管理**: 管理个人衣物、添加标签和分类
-4. **穿搭推荐**: 基于场景和个人衣橱提供穿搭建议
-5. **效果图生成**: 基于AI生成穿搭效果图（可选功能）
-
-## 快速开始
-
-### 环境要求
 - Python 3.12+
-- 现代浏览器（Chrome、Firefox、Edge等）
-- 推荐使用虚拟环境
+- 现代浏览器（Chrome/Firefox/Edge）
 
 ### 安装步骤
 
-1. 克隆仓库
+1. 克隆项目
 ```bash
-git clone <repository-url>
+git clone [项目地址]
 cd MiaoDaDemo
 ```
 
 2. 创建并激活虚拟环境
 ```bash
+# Windows
 python -m venv .venv
-source .venv/bin/activate  # Linux/macOS
-.venv\Scripts\activate     # Windows
+.venv\Scripts\activate
+
+# Linux/Mac
+python -m venv .venv
+source .venv/bin/activate
 ```
 
 3. 安装依赖
 ```bash
-pip install -r backend/requirements.txt
-```
-
-4. 设置环境变量
-```bash
-cp .env.example .env
-# 编辑.env文件，设置必要的环境变量
-```
-
-5. 运行开发服务器
-```bash
 cd backend
-python main.py
+pip install -r requirements.txt
 ```
 
-6. 访问Web界面
-- 后端服务器将在 http://127.0.0.1:8000 启动
-- API文档可在 http://127.0.0.1:8000/docs 访问
-- 前端页面可直接在浏览器中打开 frontend/index.html，或通过simple-http-server等方式提供服务
+4. 初始化数据库
+```bash
+alembic upgrade head
+```
+
+5. 启动后端服务
+```bash
+python -m uvicorn app.main:app --reload
+```
+
+6. 在浏览器中访问前端页面
+```
+打开 frontend/index.html
+```
+
+## 项目结构
+
+```
+MiaoDaDemo/
+├── backend/                # 后端代码
+│   ├── alembic/           # 数据库迁移
+│   ├── app/               # 应用代码
+│   │   ├── api/          # API路由
+│   │   ├── core/         # 核心配置
+│   │   ├── models/       # 数据模型
+│   │   └── services/     # 业务服务
+│   └── storage/          # 文件存储
+├── frontend/             # 前端代码
+│   ├── assets/          # 静态资源
+│   ├── css/             # 样式文件
+│   ├── js/              # JavaScript
+│   └── index.html       # 主页面
+└── models/              # AI模型文件
+```
 
 ## API文档
 
-启动服务器后，访问 `/docs` 或 `/redoc` 路径查看完整的API文档。
+启动后端服务后，访问以下地址查看API文档：
+- Swagger UI: http://127.0.0.1:8000/docs
+- ReDoc: http://127.0.0.1:8000/redoc
 
-## 前端界面预览
+## 开发状态
 
-### 主要页面
-- **登录/注册页面**: 用户身份验证
-- **衣橱管理页面**: 查看和管理个人服装
-- **服装上传页面**: 上传并识别新服装
-- **穿搭推荐页面**: 获取场景穿搭建议
-- **效果图生成页面**: 生成搭配效果图
+### 已完成功能
+- [x] 基础项目架构
+- [x] 角色管理系统
+- [x] 图片上传功能
+- [x] 服装识别基础功能
+- [x] 衣橱管理核心功能
 
-## 测试
+### 开发中功能
+- [ ] 服装标签系统
+- [ ] 穿搭推荐功能
+- [ ] 效果图生成
+- [ ] 用户反馈系统
 
-运行测试：
-```bash
-cd backend
-pytest
-```
+## 技术栈
+
+- 前端：HTML/CSS/JavaScript + Bootstrap 5
+- 后端：Python + FastAPI + SQLite
+- AI：PyTorch + ResNet50 + DeepSeek API
+
+## 贡献指南
+
+1. Fork 项目
+2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 创建 Pull Request
+
+## 注意事项
+
+1. 本项目目前处于开发阶段，API和功能可能会有变动
+2. 本地开发使用SQLite数据库，无需额外配置
+3. 图片上传功能需要确保storage目录具有写入权限
+4. AI模型功能可能需要较长处理时间，请耐心等待
+
+## 问题反馈
+
+如果你在使用过程中遇到任何问题，请：
+1. 查看项目文档
+2. 检查API文档
+3. 提交Issue描述问题
 
 ## 开发计划
 
-详细开发计划请查看 [development_plan.md](development_plan.md)。
+请查看 [development_plan.md](development_plan.md) 了解详细的开发计划和进度。
 
-## 项目文档
+## 最近更新
 
-本项目包含以下详细设计文档：
+- 从PostgreSQL切换到SQLite以简化本地开发
+- 前端从微信小程序调整为Web应用
+- 实现了基础的角色管理系统
+- 完成了图片上传和预处理功能
+- 添加了服装识别的基础功能
 
-- [项目结构设计](./project_structure.md) - 详细的目录结构和数据模型设计
-- [技术栈选型](./tech_stack.md) - 项目使用的技术栈和选型理由
-- [用户流程设计](./user_flow.md) - 用户使用流程和交互设计
-- [AI模型设计](./ai_models_design.md) - AI模型架构和实现方案
+## 许可证
 
-## 数据库设计
-
-要了解数据库的结构和关系，可以：
-
-1. **阅读模型代码**: 
-   * 查看 `backend/app/models/` 目录下的Python文件
-
-2. **生成ER图**:
-   * 使用项目工具脚本生成ER图:
-     ```bash
-     python tools/generate_mermaid.py
-     ```
-   * 将生成的Mermaid代码粘贴到[Mermaid Live Editor](https://mermaid.live/)查看
-
-## 贡献代码
-
-欢迎提交Pull Request！请确保代码遵循项目规范并通过测试。 
+[MIT](LICENSE) 

@@ -15,9 +15,9 @@ const COMPRESSION_OPTIONS = {
     mimeType: 'image/jpeg'
 };
 
-// 工具函数: 获取JWT令牌
-function getAuthToken() {
-    return localStorage.getItem('token');
+// 工具函数: 获取当前角色ID
+function getCurrentPersonaId() {
+    return localStorage.getItem('currentPersonaId') || '';
 }
 
 // 工具函数: 创建FormData对象
@@ -27,6 +27,8 @@ function createFormData(file, clothesId = null, isPrimary = false) {
     if (clothesId) {
         formData.append('clothes_id', clothesId);
     }
+    // 添加角色ID参数
+    formData.append('persona_id', getCurrentPersonaId());
     formData.append('is_primary', isPrimary);
     return formData;
 }
@@ -113,12 +115,9 @@ async function uploadClothesImage(file, clothesId = null, isPrimary = false, pre
         // 3. 准备表单数据
         const formData = createFormData(compressedFile, clothesId, isPrimary);
 
-        // 4. 发送上传请求
+        // 4. 发送上传请求 - 移除认证头
         const response = await fetch(UPLOAD_ENDPOINT, {
             method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${getAuthToken()}`
-            },
             body: formData
         });
 

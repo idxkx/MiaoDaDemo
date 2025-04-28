@@ -137,7 +137,7 @@ def delete_clothes(
 
 # --- Clothes Image Upload Endpoint ---
 
-@router.post("/upload-image", status_code=status.HTTP_201_CREATED)
+@router.post("/upload-image/", status_code=status.HTTP_201_CREATED)
 async def upload_clothes_image(
     file: UploadFile = File(...),
     clothes_id: Optional[int] = Form(None),
@@ -153,79 +153,99 @@ async def upload_clothes_image(
     3. 支持设置是否为主图(is_primary)
     4. 自动创建目录并生成唯一文件名
     """
-    # 1. 验证图片格式
-    allowed_types = ["image/jpeg", "image/png", "image/jpg"]
-    if file.content_type not in allowed_types:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="只支持JPG和PNG格式图片"
-        )
-    
-    # 2. 验证clothes_id(如果提供了)
-    if clothes_id:
-        clothes = db.query(Clothes).filter(
-            Clothes.id == clothes_id,
-            Clothes.user_id == current_user.id
-        ).first()
-        
-        if not clothes:
+    try:
+        # 1. 验证图片格式
+        allowed_types = ["image/jpeg", "image/png", "image/jpg"]
+        if file.content_type not in allowed_types:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="找不到指定服装或无权限"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="只支持JPG和PNG格式图片"
             )
-    
-    # 3. 创建存储路径和文件名
-    today = datetime.now().strftime("%Y%m%d")
-    user_dir = f"user_{current_user.id}"
-    save_dir = os.path.join(settings.IMAGE_STORAGE_PATH, "processed", user_dir, today)
-    
-    # 确保目录存在
-    os.makedirs(save_dir, exist_ok=True)
-    
-    # 生成唯一文件名
-    file_ext = os.path.splitext(file.filename)[1]
-    unique_filename = f"{uuid.uuid4().hex}{file_ext}"
-    file_path = os.path.join(save_dir, unique_filename)
-    relative_path = os.path.join("processed", user_dir, today, unique_filename)
-    
-    # 4. 保存文件
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-    
-    # 5. 如果提供了clothes_id，创建图片记录
-    if clothes_id:
-        # 如果设置为主图，先将其他图片设为非主图
-        if is_primary:
-            db.query(ClothesImage).filter(
-                ClothesImage.clothes_id == clothes_id,
-                ClothesImage.is_primary == True
-            ).update({"is_primary": False})
         
-        # 创建新图片记录
-        clothes_image = ClothesImage(
-            clothes_id=clothes_id,
-            image_url=relative_path,
-            is_primary=is_primary
-        )
-        db.add(clothes_image)
-        db.commit()
-        db.refresh(clothes_image)
+        # 2. 验证clothes_id(如果提供了)
+        if clothes_id:
+            clothes = db.query(Clothes).filter(
+                Clothes.id == clothes_id,
+                Clothes.user_id == current_user.id
+            ).first()
+            
+            if not clothes:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="找不到指定服装或无权限"
+                )
         
+        # 3. 创建存储路径和文件名
+        today = datetime.now().strftime("%Y%m%d")
+        user_dir = f"user_{current_user.id}"
+        save_dir = os.path.join(settings.IMAGE_STORAGE_PATH, "processed", user_dir, today)
+        
+        # 确保目录存在
+        os.makedirs(save_dir, exist_ok=True)
+        
+        # 生成唯一文件名
+        file_ext = os.path.splitext(file.filename)[1]
+        unique_filename = f"{uuid.uuid4().hex}{file_ext}"
+        file_path = os.path.join(save_dir, unique_filename)
+        relative_path = os.path.join("processed", user_dir, today, unique_filename)
+        
+        # 4. 保存文件
+        try:
+            with open(file_path, "wb") as buffer:
+                shutil.copyfileobj(file.file, buffer)
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"保存文件失败: {str(e)}"
+            )
+        
+        # 构建完整的URL路径，使用settings中的BASE_URL
+        base_url = settings.API_V1_STR
+        full_image_url = f"{base_url}/storage/images/{relative_path}"
+        
+        # 5. 如果提供了clothes_id，创建图片记录
+        if clothes_id:
+            # 如果设置为主图，先将其他图片设为非主图
+            if is_primary:
+                db.query(ClothesImage).filter(
+                    ClothesImage.clothes_id == clothes_id,
+                    ClothesImage.is_primary == True
+                ).update({"is_primary": False})
+            
+            # 创建新图片记录
+            clothes_image = ClothesImage(
+                clothes_id=clothes_id,
+                image_url=relative_path,
+                is_primary=is_primary
+            )
+            db.add(clothes_image)
+            db.commit()
+            db.refresh(clothes_image)
+            
+            return {
+                "id": clothes_image.id,
+                "clothes_id": clothes_id,
+                "image_url": full_image_url,
+                "is_primary": is_primary,
+                "filename": file.filename,
+                "file_size": file.size
+            }
+        
+        # 6. 如果没有clothes_id，仅返回保存的路径信息
         return {
-            "id": clothes_image.id,
-            "clothes_id": clothes_id,
-            "image_url": f"/storage/images/{relative_path}",
-            "is_primary": is_primary,
+            "image_url": full_image_url,
             "filename": file.filename,
-            "file_size": file.size
+            "file_size": file.size,
+            "message": "图片上传成功，使用返回的URL创建服装"
         }
-    
-    # 6. 如果没有clothes_id，仅返回保存的路径信息
-    return {
-        "image_url": f"/storage/images/{relative_path}",
-        "filename": file.filename,
-        "file_size": file.size,
-        "message": "图片上传成功，使用返回的URL创建服装"
-    }
+    except HTTPException:
+        # 直接重新抛出HTTP异常
+        raise
+    except Exception as e:
+        # 处理其他未预期的异常
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"上传图片时发生错误: {str(e)}"
+        )
 
 # --- Add other image related endpoints like get_images, delete_image etc. later --- 

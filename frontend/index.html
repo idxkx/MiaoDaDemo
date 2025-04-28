@@ -3,99 +3,512 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>智能穿搭助手</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>喵搭 - 你的智能时尚助手</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        .persona-card {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            height: 100%;
+        }
+        
+        .persona-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            border-color: #0d6efd;
+        }
+        
+        .persona-img {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 0 auto;
+        }
+        
+        .header-bg {
+            background-color: #0d6efd;
+            padding: 2rem 0;
+            color: white;
+            margin-bottom: 2rem;
+        }
+        
+        .feature-box {
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-radius: 0.5rem;
+            background-color: #f8f9fa;
+            height: 100%;
+        }
+        
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: #0d6efd;
+        }
+    </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
         <div class="container">
-            <a class="navbar-brand" href="#">智能穿搭助手</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <a class="navbar-brand" href="index.html">
+                <img src="assets/images/logo.png" alt="喵搭Logo" height="30" class="d-inline-block align-text-top me-2">
+                喵搭
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
+                <ul class="navbar-nav me-auto">
                     <li class="nav-item">
                         <a class="nav-link active" href="index.html">首页</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="upload.html">上传衣物</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="closet.html">我的衣橱</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="recommend.html">穿搭推荐</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="login.html">登录/注册</a>
+                        <a class="nav-link" href="outfit.html">搭配推荐</a>
                     </li>
                 </ul>
+                <div class="d-flex align-items-center">
+                    <!-- 未登录状态 -->
+                    <div id="auth-buttons">
+                        <button class="btn btn-outline-primary btn-sm btn-login me-2" data-bs-toggle="modal" data-bs-target="#loginModal">登录</button>
+                        <button class="btn btn-primary btn-sm btn-register" data-bs-toggle="modal" data-bs-target="#registerModal">注册</button>
+                    </div>
+                    <!-- 已登录状态 -->
+                    <div id="user-info" class="d-none">
+                        <div id="persona-info" class="me-3">
+                            <img src="" alt="角色头像" id="current-persona-img">
+                            <span class="name" id="current-persona-name"></span>
+                        </div>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-user-circle me-1"></i>
+                                <span id="username"></span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                <li><a class="dropdown-item" href="profile.html"><i class="fas fa-user me-2"></i>个人资料</a></li>
+                                <li><a class="dropdown-item" href="settings.html"><i class="fas fa-cog me-2"></i>设置</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="#" id="logout-btn"><i class="fas fa-sign-out-alt me-2"></i>退出</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </nav>
 
-    <div class="container mt-5">
-        <div class="row">
-            <div class="col-lg-6">
-                <h1 class="display-4">AI驱动的穿搭体验</h1>
-                <p class="lead">
-                    智能穿搭助手使用先进的AI技术，帮助您管理衣橱、识别服装特征、推荐穿搭方案。
-                </p>
-                <div class="d-grid gap-2 d-md-flex mt-4">
-                    <a href="login.html" class="btn btn-primary btn-lg">立即开始</a>
-                    <a href="#features" class="btn btn-outline-secondary btn-lg">了解更多</a>
-                </div>
-            </div>
-            <div class="col-lg-6">
-                <img src="https://via.placeholder.com/800x600.jpg?text=智能穿搭助手" alt="智能穿搭助手" class="img-fluid rounded">
-            </div>
-        </div>
-    </div>
-
-    <div class="container mt-5 py-5" id="features">
-        <h2 class="text-center mb-5">核心功能</h2>
-        <div class="row g-4">
-            <div class="col-md-4">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <h3 class="card-title">服装识别</h3>
-                        <p class="card-text">上传服装图片，AI自动识别服装类型、颜色、风格等特征，轻松管理您的数字衣橱。</p>
+    <!-- 欢迎区域 -->
+    <section class="bg-light py-5">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-7">
+                    <h1 class="display-4 fw-bold mb-3">让AI成为你的私人时尚顾问</h1>
+                    <p class="lead text-muted mb-4">喵搭AI智能时尚助手，帮你整理衣橱、推荐搭配、提升穿搭品味。选择一个虚拟角色，开始你的时尚之旅吧！</p>
+                    <div id="cta-buttons">
+                        <a href="#personas" class="btn btn-primary btn-lg me-3">选择角色</a>
+                        <a href="#features" class="btn btn-outline-secondary btn-lg">了解功能</a>
                     </div>
                 </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <h3 class="card-title">穿搭推荐</h3>
-                        <p class="card-text">根据场景、天气和个人偏好，从您的衣橱中推荐合适的穿搭方案，告别穿衣烦恼。</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <h3 class="card-title">效果图生成</h3>
-                        <p class="card-text">AI生成穿搭效果图，直观展示搭配效果，帮助您做出更好的穿搭决策。</p>
-                    </div>
+                <div class="col-lg-5 d-none d-lg-block">
+                    <img src="assets/images/hero-image.png" alt="时尚展示" class="img-fluid rounded shadow-lg">
                 </div>
             </div>
         </div>
-    </div>
+    </section>
 
-    <footer class="bg-dark text-white py-4 mt-5">
+    <!-- 角色选择区域 -->
+    <section id="personas" class="py-5">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold">选择你的虚拟角色</h2>
+                <p class="text-muted">每个角色都有不同的穿搭风格和个性特点，选择一个来获取针对性的搭配建议</p>
+            </div>
+            
+            <div class="row g-4">
+                <!-- 角色1 -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="persona-card" data-persona-id="1">
+                        <div class="persona-img-wrapper">
+                            <img src="assets/images/personas/office-lady.jpg" alt="商务丽人" class="persona-img">
+                        </div>
+                        <div class="persona-info">
+                            <h3>梦琪</h3>
+                            <div class="occupation">金融分析师</div>
+                            <div class="style">商务优雅风格</div>
+                            <div class="tags">
+                                <span class="badge-tag">28岁</span>
+                                <span class="badge-tag">职场精英</span>
+                                <span class="badge-tag">都市生活</span>
+                            </div>
+                            <p class="description">热爱工作的职场女性，注重高品质商务装扮，追求优雅与专业的平衡，偏爱极简风格与精致配饰。</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 角色2 -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="persona-card" data-persona-id="2">
+                        <div class="persona-img-wrapper">
+                            <img src="assets/images/personas/college-girl.jpg" alt="校园青春" class="persona-img">
+                        </div>
+                        <div class="persona-info">
+                            <h3>小雨</h3>
+                            <div class="occupation">大学生</div>
+                            <div class="style">学院休闲风格</div>
+                            <div class="tags">
+                                <span class="badge-tag">20岁</span>
+                                <span class="badge-tag">活力青春</span>
+                                <span class="badge-tag">校园生活</span>
+                            </div>
+                            <p class="description">活泼开朗的大学生，喜欢舒适休闲的穿搭，偏爱牛仔裤、卫衣和帆布鞋，追求青春活力的装扮。</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 角色3 -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="persona-card" data-persona-id="3">
+                        <div class="persona-img-wrapper">
+                            <img src="assets/images/personas/fashion-blogger.jpg" alt="时尚博主" class="persona-img">
+                        </div>
+                        <div class="persona-info">
+                            <h3>艾拉</h3>
+                            <div class="occupation">时尚博主</div>
+                            <div class="style">前卫时尚风格</div>
+                            <div class="tags">
+                                <span class="badge-tag">25岁</span>
+                                <span class="badge-tag">潮流达人</span>
+                                <span class="badge-tag">社交媒体</span>
+                            </div>
+                            <p class="description">社交媒体活跃的时尚达人，喜欢尝试各种最新潮流，擅长混搭，追求独特个性的穿搭风格。</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 角色4 -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="persona-card" data-persona-id="4">
+                        <div class="persona-img-wrapper">
+                            <img src="assets/images/personas/outdoor-girl.jpg" alt="户外爱好者" class="persona-img">
+                        </div>
+                        <div class="persona-info">
+                            <h3>晴晴</h3>
+                            <div class="occupation">户外教练</div>
+                            <div class="style">运动功能风格</div>
+                            <div class="tags">
+                                <span class="badge-tag">26岁</span>
+                                <span class="badge-tag">户外达人</span>
+                                <span class="badge-tag">健康生活</span>
+                            </div>
+                            <p class="description">热爱户外活动的运动达人，注重功能性和舒适度，喜欢机能风格的服装，追求阳光健康的生活方式。</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 角色5 -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="persona-card" data-persona-id="5">
+                        <div class="persona-img-wrapper">
+                            <img src="assets/images/personas/minimal-style.jpg" alt="极简主义" class="persona-img">
+                        </div>
+                        <div class="persona-info">
+                            <h3>梓璇</h3>
+                            <div class="occupation">室内设计师</div>
+                            <div class="style">极简文艺风格</div>
+                            <div class="tags">
+                                <span class="badge-tag">30岁</span>
+                                <span class="badge-tag">艺术爱好者</span>
+                                <span class="badge-tag">生活美学</span>
+                            </div>
+                            <p class="description">追求简约生活的设计师，喜欢中性色调和优质面料，重视衣物的质感和剪裁，崇尚"少即是多"的穿搭理念。</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 角色6 -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="persona-card" data-persona-id="6">
+                        <div class="persona-img-wrapper">
+                            <img src="assets/images/personas/vintage-lover.jpg" alt="复古爱好者" class="persona-img">
+                        </div>
+                        <div class="persona-info">
+                            <h3>香菲</h3>
+                            <div class="occupation">咖啡馆老板</div>
+                            <div class="style">复古文艺风格</div>
+                            <div class="tags">
+                                <span class="badge-tag">27岁</span>
+                                <span class="badge-tag">复古控</span>
+                                <span class="badge-tag">文艺生活</span>
+                            </div>
+                            <p class="description">热爱复古风格的文艺青年，喜欢碎花裙、复古牛仔和玛丽珍鞋，崇尚慢生活，追求独特韵味的装扮。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 功能介绍区域 -->
+    <section id="features" class="py-5 bg-light">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold">我们的特色功能</h2>
+                <p class="text-muted">喵搭整合了AI技术与时尚领域知识，为你提供全方位的穿搭服务</p>
+            </div>
+            
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="feature-box">
+                        <div class="feature-icon text-primary">
+                            <i class="fas fa-tshirt fa-3x"></i>
+                        </div>
+                        <h3>智能衣橱管理</h3>
+                        <p>上传你的衣物照片，AI自动识别分类并建立数字化衣橱，帮你轻松管理所有服装。</p>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="feature-box">
+                        <div class="feature-icon text-primary">
+                            <i class="fas fa-magic fa-3x"></i>
+                        </div>
+                        <h3>AI搭配推荐</h3>
+                        <p>基于你的风格偏好和场合需求，AI智能分析你的衣橱，推荐最适合你的穿搭方案。</p>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="feature-box">
+                        <div class="feature-icon text-primary">
+                            <i class="fas fa-shopping-bag fa-3x"></i>
+                        </div>
+                        <h3>购物建议</h3>
+                        <p>分析你的衣橱缺失项，推荐适合你的补充单品，帮你打造更完善的个人衣橱。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer class="bg-dark text-light py-4">
         <div class="container">
             <div class="row">
                 <div class="col-md-6">
-                    <h5>智能穿搭助手</h5>
-                    <p>基于AI的服装识别和穿搭推荐系统</p>
+                    <h5>喵搭 - 你的AI时尚助手</h5>
+                    <p class="small">让科技与时尚完美结合，提升你的穿搭体验</p>
                 </div>
                 <div class="col-md-6 text-md-end">
-                    <p>&copy; 2024 智能穿搭助手. 保留所有权利.</p>
+                    <div class="mb-2">
+                        <a href="#" class="text-light me-3"><i class="fab fa-weibo"></i></a>
+                        <a href="#" class="text-light me-3"><i class="fab fa-weixin"></i></a>
+                        <a href="#" class="text-light"><i class="fab fa-instagram"></i></a>
+                    </div>
+                    <p class="small">© 2024 喵搭. 保留所有权利</p>
                 </div>
             </div>
         </div>
     </footer>
 
+    <!-- 登录模态框 -->
+    <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="loginModalLabel">登录</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="login-form">
+                        <div class="mb-3">
+                            <label for="login-username" class="form-label">用户名</label>
+                            <input type="text" class="form-control" id="login-username" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="login-password" class="form-label">密码</label>
+                            <input type="password" class="form-control" id="login-password" required>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="remember-me">
+                                <label class="form-check-label" for="remember-me">记住我</label>
+                            </div>
+                            <a href="#" class="text-decoration-none small">忘记密码？</a>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">登录</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 注册模态框 -->
+    <div class="modal fade" id="registerModal" tabindex="-1" aria-labelledby="registerModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="registerModalLabel">注册</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="register-form">
+                        <div class="mb-3">
+                            <label for="register-username" class="form-label">用户名</label>
+                            <input type="text" class="form-control" id="register-username" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="register-email" class="form-label">电子邮箱</label>
+                            <input type="email" class="form-control" id="register-email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="register-password" class="form-label">密码</label>
+                            <input type="password" class="form-control" id="register-password" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="register-confirm-password" class="form-label">确认密码</label>
+                            <input type="password" class="form-control" id="register-confirm-password" required>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="terms-agree" required>
+                            <label class="form-check-label" for="terms-agree">我同意<a href="#" class="text-decoration-none">服务条款</a>和<a href="#" class="text-decoration-none">隐私政策</a></label>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">注册</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 检查用户登录状态并更新界面
+            checkUserLoginStatus();
+            
+            // 选择角色卡片点击事件
+            const personaCards = document.querySelectorAll('.persona-card');
+            personaCards.forEach(card => {
+                card.addEventListener('click', function() {
+                    const personaId = this.getAttribute('data-persona-id');
+                    const personaName = this.querySelector('h3').textContent;
+                    const personaImg = this.querySelector('.persona-img').src;
+                    
+                    // 检查用户是否登录
+                    if (!isUserLoggedIn()) {
+                        // 未登录，显示登录模态框
+                        const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+                        loginModal.show();
+                        return;
+                    }
+                    
+                    // 已登录，保存选择的角色并跳转
+                    localStorage.setItem('currentPersonaId', personaId);
+                    localStorage.setItem('currentPersonaName', personaName);
+                    localStorage.setItem('currentPersonaImg', personaImg);
+                    
+                    // 更新导航栏中的角色信息
+                    updatePersonaInfo();
+                    
+                    // 跳转到衣橱页面
+                    window.location.href = 'closet.html';
+                });
+            });
+            
+            // 登录表单提交
+            document.getElementById('login-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const username = document.getElementById('login-username').value;
+                const password = document.getElementById('login-password').value;
+                
+                // 这里应该有实际的登录逻辑，暂时模拟成功
+                simulateLogin(username);
+                
+                // 关闭模态框
+                const loginModal = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
+                loginModal.hide();
+            });
+            
+            // 注册表单提交
+            document.getElementById('register-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const username = document.getElementById('register-username').value;
+                
+                // 这里应该有实际的注册逻辑，暂时模拟成功
+                simulateLogin(username);
+                
+                // 关闭模态框
+                const registerModal = bootstrap.Modal.getInstance(document.getElementById('registerModal'));
+                registerModal.hide();
+            });
+            
+            // 退出登录
+            document.getElementById('logout-btn').addEventListener('click', function(e) {
+                e.preventDefault();
+                localStorage.removeItem('token');
+                localStorage.removeItem('username');
+                localStorage.removeItem('currentPersonaId');
+                localStorage.removeItem('currentPersonaName');
+                localStorage.removeItem('currentPersonaImg');
+                checkUserLoginStatus();
+            });
+            
+            // 模拟登录
+            function simulateLogin(username) {
+                localStorage.setItem('token', 'fake-token-' + Date.now());
+                localStorage.setItem('username', username);
+                checkUserLoginStatus();
+            }
+            
+            // 检查用户是否已登录
+            function isUserLoggedIn() {
+                return localStorage.getItem('token') !== null;
+            }
+            
+            // 检查用户登录状态并更新界面
+            function checkUserLoginStatus() {
+                const isLoggedIn = isUserLoggedIn();
+                const authButtons = document.getElementById('auth-buttons');
+                const userInfo = document.getElementById('user-info');
+                
+                if (isLoggedIn) {
+                    authButtons.classList.add('d-none');
+                    userInfo.classList.remove('d-none');
+                    document.getElementById('username').textContent = localStorage.getItem('username');
+                    
+                    // 更新当前角色信息
+                    updatePersonaInfo();
+                } else {
+                    authButtons.classList.remove('d-none');
+                    userInfo.classList.add('d-none');
+                }
+            }
+            
+            // 更新导航栏中的角色信息
+            function updatePersonaInfo() {
+                const personaInfo = document.getElementById('persona-info');
+                const personaImg = document.getElementById('current-persona-img');
+                const personaName = document.getElementById('current-persona-name');
+                
+                if (localStorage.getItem('currentPersonaId')) {
+                    personaImg.src = localStorage.getItem('currentPersonaImg') || '';
+                    personaName.textContent = localStorage.getItem('currentPersonaName') || '';
+                    personaInfo.classList.remove('d-none');
+                } else {
+                    personaInfo.classList.add('d-none');
+                }
+            }
+        });
+    </script>
 </body>
 </html> 
